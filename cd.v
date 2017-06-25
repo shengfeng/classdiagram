@@ -368,12 +368,12 @@ Definition NotSelfGenralization (model : SimpleUML) : Prop :=
 
 
 (** ----- well formed ----- **)
-(** 
+
 Definition WellFormed (s : SimpleUML) :  Prop :=
   UniqueClass s /\ UniqueAttribute s /\  UniqueDataType s /\
   UniqueAttrInClass s /\ nsc_AttributeUniqueness s /\ nsc_ClassUniqueness s /\
   nsc_DataTypeUniquenss s /\ NotSelfGenralization s.
-**)
+
 
 
 
