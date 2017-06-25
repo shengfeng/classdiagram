@@ -7,6 +7,17 @@ Import ListNotations.
 Parameter R : Class -> Class -> Class -> list Assoc.
 Parameter CA : Class -> Class -> assocKind -> Assoc.
 
+Print AsEnd.
+
+Definition CreateAsEnd (c : Class) :=
+  BAsEnd "_" c (Nat 0) Star.
+
+Print Assoc.
+
+Definition CreateAssoc (n : NamedElement) (c1 c2 : Class) :=
+  BAssoc n none (CreateAsEnd c1, CreateAsEnd c2).
+
+
 Inductive refineone : SimpleUML -> SimpleUML -> Prop :=
 | import:  forall c' ci cj C T P S G,
     not (set_In c' C) -> 

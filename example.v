@@ -1,4 +1,5 @@
 Require Export cd.
+Require Export refinement.
 Require Import List.
 Require Import String.
 Require Import ListSet.
@@ -155,8 +156,69 @@ Definition gPaymentCreditCard :=
   BGen Payment CreditCard.
 
 Definition m2:= mkSimpleUML 
-  [Order;Customer;Payment;BankAccount;CreditCard]
+  [CreditCard;BankAccount;Order;Customer;Payment]
   [AttrCustomerName; AttrAddress; AttrOrderDate; AttrPrice; AttrOrderType] 
   [String; Date; Float; Enum] 
   [aCustomerOrder;aCustomerPayment] 
-  [gPaymentBankAccount;gPaymentCreditCard].
+  [gPaymentCreditCard;gPaymentBankAccount].
+
+
+(** ----- proof -----  **)
+
+Definition m1 := mkSimpleUML
+  [Order;Customer;Payment]
+  [AttrCustomerName; AttrAddress; AttrOrderDate; AttrPrice; AttrOrderType] 
+  [String; Date; Float; Enum] 
+  [aCustomerOrder;aCustomerPayment] 
+  [].
+
+Definition m1' := mkSimpleUML
+  [BankAccount;Order;Customer;Payment]
+  [AttrCustomerName; AttrAddress; AttrOrderDate; AttrPrice; AttrOrderType] 
+  [String; Date; Float; Enum] 
+  [aCustomerOrder;aCustomerPayment] 
+  [gPaymentBankAccount].
+
+Lemma refine_m0_to_m1:
+  refineone m0 m1.
+Proof.
+  unfold m0, m1.
+Admitted.
+
+
+Lemma refine_m1_to_m1':
+  refineone m1 m1'.
+Proof.
+  unfold m1, m1'.
+  eapply dec1.
+  - simpl; intros contra.
+    destruct contra; try inversion H; try discriminate.
+    destruct H0; try discriminate. assumption.
+  - simpl. right. right. left. reflexivity.
+Qed.
+
+Lemma refine_m1'_to_m2:
+  refineone m1' m2.
+Proof.
+  unfold m1', m2.
+  eapply dec1.
+  - simpl; intros contra.
+    destruct contra; try inversion H; try discriminate.
+    destruct H0; try discriminate. inversion H0; try discriminate.
+    assumption.
+  - simpl. right. right. right. left. reflexivity.
+Qed.
+
+
+Theorem refine_m0_to_m2:
+  refine m0 m2.
+Proof.
+  apply trans with m1.
+  apply one. apply refine_m0_to_m1.
+  apply trans with m1'.
+  apply one; apply refine_m1_to_m1'.
+  apply trans with m2.
+  apply one; apply refine_m1'_to_m2.
+  apply reflex.
+Qed.
+
