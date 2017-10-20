@@ -30,17 +30,16 @@ Inductive Classifier : Set :=
 Inductive Operation : Set :=
 | BOperation : NamedElement -> list string -> Operation.
 
+(** ----- Data Type ---- **)
+Inductive DataType : Set :=
+| BDataType: Classifier -> DataType.
+
 (** ----- attribute, primitive data type, class ----- **)
 Inductive Attribute : Set :=
-| BAttribute (super : NamedElement) (type : Classifier)
-with DataType : Set :=
-| BDataType (super : Classifier)
+| BAttribute : NamedElement -> Classifier -> Attribute
 with Class : Set :=
-| BClass (super : Classifier) (abstract : bool) (attribute : list Attribute).
+| BClass : Classifier -> bool -> list Attribute -> Class.
 
-(** ----- generalization ----- **)
-Inductive Gen : Set :=
-| BGen (super : Class) (sub : Class).
 
 (** ----- association end ----- **)
 Inductive Natural :=
@@ -58,8 +57,9 @@ Inductive assocKind : Set :=
 Inductive Assoc : Set :=
 | BAssoc: NamedElement -> assocKind -> (AsEnd * AsEnd) -> Assoc.
 
-Inductive AlterAssoc : Set :=
-| BAAssoc (super : NamedElement) (kind: assocKind) (ends: AsEnd * AsEnd).
+(** ----- generalization ----- **)
+Inductive Gen : Set :=
+| BGen (super : Class) (sub : Class).
 
 (** ------------------------------- **)
 (** -------- Source Model --------- **)
@@ -143,6 +143,26 @@ Definition beqGen g g' :=
   | right _ => false
   end.
 
+
+(** ---------- Functions --------- **)
+
+(** --- get all parents --- **)
+Fixpoint parents (c : Class) (l : list Gen) :=
+match l with
+| [] => []
+| (BGen p c') :: l' => if eqClass_dec c c' 
+                       then [p] 
+                       else parents c  l'
+end.
+
+
+(*
+Fixpoint all_parents (c : Class) (l : list Gen) :=
+match l with
+| [] => [] 
+
+*)
+
 (** ------------------projection--------------------- **)
 
 (** ----- get named element oid ----- **)
@@ -150,7 +170,6 @@ Definition NamedElement_oid (o : NamedElement) : nat :=
   match o with
     | (BNamedElement o _ ) => o
   end.
-
 
 (** ----- get named element name ----- **)
 Definition NamedElement_name (o : NamedElement) : string :=
@@ -164,31 +183,18 @@ Definition Attribute_super (a : Attribute) : NamedElement :=
     | BAttribute s _ => s
   end.
 
+Definition Attribute_name (a : Attribute) : string :=
+  NamedElement_name (Attribute_super a).
+
+Definition Attribute_oid (a : Attribute) : nat :=
+  NamedElement_oid (Attribute_super a).
+
 (** ------ get the classifier of attribute ----- **)
 Definition Attribute_type (a : Attribute) : Classifier :=
   match a with
     | BAttribute _ c => c
   end.
 
-(** ----- get the basis of class ------ **)
-Definition Class_super (c : Class) : Classifier :=
-  match c with
-    | BClass c _ _  => c
-  end.
-
-
-(** ----- get the abstract of class ----- **)
-Definition Class_abstract (c : Class) : bool :=
-  match c with 
-    | BClass _ a _ => a 
-  end.
-
-
-(** ----- get the attributes of class ----- **)
-Definition Class_attribute (c : Class) : list Attribute :=
-  match c with
-    | BClass _ _ a  => a
-  end.
 
 (** ----- get the basis (name, abstract) of classifier ----- **)
 Definition Classifier_super (c : Classifier) : NamedElement :=
@@ -196,11 +202,49 @@ Definition Classifier_super (c : Classifier) : NamedElement :=
     | BClassifier s => s
   end.
 
+Definition Classifier_name (c : Classifier) : string :=
+  NamedElement_name (Classifier_super c).
+
+Definition Classifier_oid (c : Classifier) :=
+  NamedElement_oid (Classifier_super c).
+
+
+(** ----- get the basis of class ------ **)
+Definition Class_super (c : Class) : Classifier :=
+  match c with
+    | BClass c _ _  => c
+  end.
+
+Definition Class_name (c : Class) : string :=
+  Classifier_name (Class_super c).
+
+Definition Class_oid (c : Class) : nat :=
+  Classifier_oid (Class_super c).
+
+(** ----- get the abstract of class ----- **)
+Definition Class_abstract (c : Class) : bool :=
+  match c with 
+    | BClass _ a _ => a 
+  end.
+
+(** ----- get the attributes of class ----- **)
+Definition Class_attribute (c : Class) : list Attribute :=
+  match c with
+    | BClass _ _ a  => a
+  end.
+
+
 (** ----- get the classifier of primitive data type ------ **)
 Definition DataType_super (p : DataType) : Classifier :=
   match p with
     | BDataType s => s
   end.
+
+Definition DataType_name (c : DataType) : string :=
+  Classifier_name (DataType_super c).
+
+Definition DataType_oid (c : DataType) : nat :=
+  Classifier_oid (DataType_super c).
 
 (** ----- get the super class of generalization ----- **)
 Definition Gen_src (g : Gen) : Class :=
@@ -246,6 +290,12 @@ Definition Assoc_super (a : Assoc) : NamedElement :=
   end.
 
 
+Definition Assoc_name (a : Assoc) : string :=
+  NamedElement_name (Assoc_super a).
+
+Definition Assoc_oid (a : Assoc) : nat :=
+  NamedElement_oid (Assoc_super a).
+
 Definition Assoc_kind (a : Assoc) : assocKind :=
   match a with
   | BAssoc _ k _ => k
@@ -266,39 +316,7 @@ Definition Assoc_dest (a : Assoc) : Class :=
   AsEnd_class (snd (Assoc_node a)).
 
 
-(** ----------------Derived Projections------------------- **)
-
-Definition Classifier_name (c : Classifier) : string :=
-  NamedElement_name (Classifier_super c).
-
-Definition Classifier_oid (c : Classifier) :=
-  NamedElement_oid (Classifier_super c).
-
-Definition Attribute_name (a : Attribute) : string :=
-  NamedElement_name (Attribute_super a).
-
-Definition Attribute_oid (a : Attribute) : nat :=
-  NamedElement_oid (Attribute_super a).
-
-Definition DataType_name (c : DataType) : string :=
-  Classifier_name (DataType_super c).
-
-Definition DataType_oid (c : DataType) : nat :=
-  Classifier_oid (DataType_super c).
-
-Definition Class_name (c : Class) : string :=
-  Classifier_name (Class_super c).
-
-Definition Class_oid (c : Class) : nat :=
-  Classifier_oid (Class_super c).
-
-Definition Assoc_name (a : Assoc) : string :=
-  NamedElement_name (Assoc_super a).
-
-Definition Assoc_oid (a : Assoc) : nat :=
-  NamedElement_oid (Assoc_super a).
-
-(** ---------Structural Constraints--------- *)
+(** --------- the set of each concept--------- *)
 
 Definition Class_Instances (model : SimpleUML) :=
   MClass_Instance model.
@@ -315,7 +333,9 @@ Definition Attribute_Instances (model : SimpleUML) :=
 Definition Gen_Instances (model : SimpleUML) :=
   MGen_Instance model.
 
-(** ###### well-formed rules ##### **)
+
+
+(** ###### Structural Constraints ##### **)
 
 Definition lstClassOid (model : SimpleUML) : list nat :=
   map Class_oid (Class_Instances model).
@@ -331,7 +351,8 @@ Definition lstAssocOid (model : SimpleUML) : list nat :=
 
 
 Definition UniqueOid (model : SimpleUML) : Prop :=
-  NoDup (lstClassOid model ++ lstAttrOid model ++ lstDataOid model ++ lstAssocOid model).
+  NoDup (lstClassOid model ++ lstAttrOid model ++ 
+         lstDataOid model ++ lstAssocOid model).
 
 Definition UniqueClass (model : SimpleUML) : Prop :=
   NoDup (Class_Instances model).
@@ -345,6 +366,8 @@ Definition UniqueAttribute (model : SimpleUML) : Prop :=
 Definition UniqueAttrInClass (model : SimpleUML) : Prop :=
   forall o: Class,  (In o (Class_Instances model)) ->
     NoDup (Class_attribute o).
+
+Print NoDup.
 
 
 (** ##### Non-structural Contraints ##### **)

@@ -38,6 +38,26 @@ Inductive OclClassifier :=
 .
 
 Inductive oclexpr :=
+| CIF : boolexpr -> oclexpr -> oclexpr -> oclexpr
+| VAR : varname -> oclexpr
+| LET : varname -> oclexpr -> oclexpr -> oclexpr
+| MSG : string -> oclexpr
+| LIT : OclClassifier -> oclexpr
+| ITER : oclexpr -> list OclClassifier -> oclexpr
+| BOOL : boolexpr -> oclexpr
+| LOOP : varname -> list oclexpr -> oclexpr
+with
+boolexpr :=
+| True : boolexpr
+| False : boolexpr 
+| lesser : oclexpr -> oclexpr -> boolexpr
+| greater : oclexpr -> oclexpr -> boolexpr
+| lseq : oclexpr -> oclexpr -> boolexpr
+| greq : oclexpr -> oclexpr -> boolexpr
+| eq : oclexpr -> oclexpr -> boolexpr.
+
+(*
+Inductive oclexpr :=
 | IFExpr : ifexpr -> oclexpr
 | VAR : varname -> oclexpr
 | LETExpr : letexpr -> oclexpr
@@ -70,8 +90,8 @@ boolexpr :=
 .
 
 Print oclexpr_rect.
-
-
+(* *)
+ *)
 Inductive ConstraintType :=
 | Inv    | Pre
 | Post   | Guard.
@@ -87,10 +107,10 @@ Section Example.
 
 Print string.
 
-Definition cstage : string := "cstage".
+Definition active : string := "isActive".
 
-Definition oe1 : oclexpr :=
-  BOOLExpr (greater (VAR cstage) (LITExpr (OCLInt 15))).
+Definition oe1 : oclexpr := BOOL 
+  (eq (VAR active) (LIT (OCLBoolean false))).
 
 Parameter Customer : Class.
 
@@ -100,6 +120,7 @@ Definition c1 : Constraint :=
 Definition lstOcl := [c1].
 
 End Example.
+
 
 
 (* definitions for arithmetic expression and boolean expression *)

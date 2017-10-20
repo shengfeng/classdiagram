@@ -1,7 +1,10 @@
 Require Export cd.
-Require Import List.
-Require Import String.
-Require Import ListSet.
+
+Require Export String ListSet List Arith Bool. 
+Open Scope nat_scope.
+Open Scope type_scope.
+Open Scope string_scope.
+Open Scope list_scope.
 Import ListNotations.
 
 Parameter R : Class -> Class -> Class -> list Assoc.
@@ -59,9 +62,12 @@ Inductive refineone : SimpleUML -> SimpleUML -> Prop :=
 
 
 Inductive refine : SimpleUML -> SimpleUML -> Prop :=
-| one : forall m1 m2, refineone m1 m2 -> refine m1 m2
-| reflex : forall m, refine m m
-| trans : forall m1 m2 m3, refine m1 m2 -> refine m2 m3 -> refine m1 m3
+| one : forall m1 m2, 
+    refineone m1 m2 -> refine m1 m2
+| reflex : forall m, 
+    refine m m
+| trans : forall m1 m2 m3, 
+    refine m1 m2 -> refine m2 m3 -> refine m1 m3
 .
 
 Theorem wellFormed_preserve :
@@ -73,26 +79,29 @@ Proof.
   inversion H2; subst; simpl in H.
 Admitted.
 
+Require Import Relations.
+
 Theorem refine_refl :
-  forall m, refine m m.
+   reflexive _  refine.
 Proof.
-  intros m. apply reflex.
+  unfold reflexive. 
+  intro x. apply reflex.
 Qed.
 
 
 Theorem refine_trans :
-  forall m1 m2 m3, refine m1 m2 -> refine m2 m3
-              -> refine m1 m3.
+  transitive _ refine.
 Proof.
-  intros m1 m2 m3 H1 H2.
-  apply trans with m2; assumption.
+  unfold transitive.
+  intros x y z. apply trans.
 Qed.
 
 
 Theorem class_preserve :
-  forall c m1 m2, refineone m1 m2 ->
-             set_In c (MClass_Instance m1) ->
-             set_In c (MClass_Instance m2).
+  forall c m1 m2, 
+    refineone m1 m2 ->
+    set_In c (MClass_Instance m1) ->
+    set_In c (MClass_Instance m2).
 Proof.
   intros c m1 m2 H.
   induction H; intros H1; simpl;
@@ -101,9 +110,10 @@ Qed.
 
 
 Theorem gen_preserve :
-  forall sub super m1 m2, refineone m1 m2 ->
-                     set_In (BGen super sub) (MGen_Instance m1) ->
-                     set_In (BGen super sub) (MGen_Instance m2).
+  forall sub super m1 m2, 
+    refineone m1 m2 ->
+    set_In (BGen super sub) (MGen_Instance m1) ->
+    set_In (BGen super sub) (MGen_Instance m2).
 Proof.
   intros sub super m1 m2 H.
   induction H; intros H1; simpl in H1; simpl; try assumption.

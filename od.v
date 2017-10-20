@@ -15,6 +15,8 @@ Require Import Peano_dec.
 
 Require Import cd.
 
+Import ListNotations.
+
 Inductive Object := 
 | BObject: string -> Object.
 
@@ -61,19 +63,34 @@ Record State : Set :=
 
 Definition VObject_object (o : VObject) := snd o.
 
+Check VObject_object.
+
 Definition VObject_class (o : VObject) := fst o.
+
+Check VObject_class.
 
 Definition VLink_link (o : VLink) := snd o.
 
+Check VLink_link.
+
 Definition VLink_assoc (o : VLink) := fst o.
+
+Check VLink_assoc.
 
 Definition VEnd_src (o : VEnd) : Object := snd (fst o).
 
+Check VEnd_src.
+
 Definition VEnd_dest (o : VEnd) : Object := snd o.
+
+Check VEnd_dest.
 
 Definition VEnd_link (o : VEnd) := fst (fst o).
 
+Check VEnd_link.
 
+
+(* ----- Component ----- *)
 Inductive Component : Type :=
 | cclass : Class -> Component
 | cattribute : Attribute -> Component
@@ -82,6 +99,7 @@ Inductive Component : Type :=
 | cabstract : Class -> list Class -> Component
 | cnonabstract : Class -> list Class -> Component
 .
+
 
 (** every object o in s is the instance of a class c **)
 Definition Sat_class (c: Class) (s : State) : Prop :=
@@ -105,8 +123,6 @@ Fixpoint mapLink (a : Assoc) (l : list VLink) : list Link :=
   | o :: l' => if beqAssoc a (VLink_assoc o) then VLink_link o
               else mapLink a l'
   end.
-
-Print NoDup.
 
 
 (** ----- get the objects according to link ----- *)
@@ -138,20 +154,20 @@ Fixpoint links_objects_dest (ll: list Link) (lr : list VEnd) :=
   end.
 
 (** ----- get the super class directly ----- **)
-Fixpoint super (lg : list Gen) (c : Class) :=
+Fixpoint parents (lg : list Gen) (c : Class) :=
   match lg with
   | nil => nil
-  | g :: l => if beqClass c (Gen_src g) then
-               (Gen_dest g) :: (super l c)
-             else
-               super l c
+  | g :: l => if beqClass c (Gen_dest g) 
+              then (Gen_src g) :: (parents l c)
+              else parents l c
   end.
 
+(*
+Definition allparents (c : Class) (lg : list Gen) :=
+  map (parents lg) lc.
 
-Definition dsuper (lg : list Gen) (lc : list Class) :=
-  map (super lg) lc.
-
-Check dsuper.
+Check allparents.
+*)
 
 Section GExample.
 
@@ -178,20 +194,24 @@ Section GExample.
   Definition G3 : Gen := BGen c2 c4.
   Definition G4 : Gen := BGen c3 c5.
 
-  Definition G := G1 :: G2 :: G3 :: G4 :: nil.
+  Definition G := [G1; G2; G3; G4].
 
-  Compute (Gen_dest G1).
-  Compute (Gen_src G1).
+  Eval simpl in (Gen_dest G1).
+  Eval simpl in (Gen_src G1).
 
-  Eval simpl in (super G c1).
-  Eval simpl in (dsuper G (c2 :: c3 :: nil)).
+  Eval simpl in (parents G c4).
+  (* Eval simpl in (allparents G ()). *)
 
 End GExample.
 
 (** only direct Generalization **)
 Definition Sat_gen (g: Gen) (s : State) :=
-  forall p : Object, let super := Gen_src g in In p (mapObject super (vobjects s)) ->
-                let  sub := Gen_dest g in In p (mapObject sub (vobjects s)).
+  forall p : Object, 
+  let sub := Gen_dest g in 
+    In p (mapObject sub (vobjects s)) ->
+  let super := Gen_src g in 
+    In p (mapObject super (vobjects s)).
+
 
 (** get subset **)
 Fixpoint unionSet (sub: list Class) (l : list VObject) :=
@@ -212,15 +232,15 @@ Definition Sat_abstract (c : Class) (sub : list Class) (s : State) :=
 Definition ncsabstract (c : Class) :=
   Class_abstract c = false.
 
+
 Definition dom (st : State) (a : Assoc) :=
   let lks := mapLink a (vlinks st) in
   links_objects_src lks (vends st).
 
-Print dom.
-
 Definition ran (st : State) (a : Assoc) :=
   let lks := mapLink a (vlinks st) in
   links_objects_dest lks (vends st).
+
 
 Definition Sat_assoc1 (a : Assoc) (s : State) :=
   forall o, In o (dom s a) ->

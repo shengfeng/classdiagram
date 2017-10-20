@@ -68,10 +68,10 @@ Definition FinalState : Class :=
 
 (* generalization *)
 Definition State_InitState : Gen := 
-  BGen InitState State.
+  BGen State InitState.
 
 Definition State_FinalState : Gen :=
-  BGen FinalState State.
+  BGen State FinalState.
 
 (* association end*)
 Definition source : AsEnd := 
@@ -200,12 +200,17 @@ Proof.
   intros. simpl in H.
   unfold Sat_class, st.
   inversion H; subst; clear H. 
-  + simpl. auto.
-  + inversion H0; subst; clear H0; simpl; auto.
+  - simpl. auto.
+  - inversion H0; subst; clear H0; simpl; auto.
     inversion H; subst; clear H; simpl; auto.
     inversion H0; subst; clear H0; simpl; auto.
 Qed.
 
+Eval simpl in ((mapObject (Gen_dest State_InitState) (vobjects st))).
+Eval simpl in ((mapObject (Gen_src State_InitState) (vobjects st))).
+
+
+Print Sat_gen.
 Theorem proof_test2 :
   Sat_gen State_InitState st.
 Proof.
@@ -221,9 +226,9 @@ Proof.
   intros. simpl in H.
   unfold Sat_gen, st.
   inversion H; subst; clear H. 
-  + intros. simpl in *.
+  - intros. simpl in *.
     destruct H; auto.
-  + intros. destruct H0. rewrite <- H0 in *.
+  - intros. destruct H0. rewrite <- H0 in *.
     simpl in *. auto. inversion H0.
 Qed.
 
@@ -269,3 +274,57 @@ Proof.
 
   auto.
 Qed.
+
+
+(* ----- refinement ------ *)
+Definition EleExitAction : NamedElement := 
+  BNamedElement 11 "ExitAction".
+Definition EleEntryAction : NamedElement := 
+  BNamedElement 12 "EntryAction".
+Definition EleAction : NamedElement := 
+  BNamedElement 13 "Action".
+Definition EleAssocExitAction : NamedElement :=
+  BNamedElement 14 "exit_Action".
+Definition EleAssocEntryAction : NamedElement :=
+  BNamedElement 15 "entry_Action".
+
+Definition CExitAction : Classifier :=
+  BClassifier EleExitAction.
+Definition CEntryAction: Classifier :=
+  BClassifier EleEntryAction.
+Definition CAction : Classifier :=
+  BClassifier EleAction.
+
+Definition ExitAction : Class := 
+  BClass CExitAction false [].
+Definition Action : Class :=
+  BClass CAction true [].
+Definition EntryAction : Class :=
+  BClass CEntryAction false [].
+
+Definition rstate: AsEnd := 
+  BAsEnd "state" State (Nat 1) Star.
+Definition exitAction : AsEnd :=
+  BAsEnd "exitAction" ExitAction (Nat 1) (Nat 1).
+Definition exit_Action : Assoc :=
+  BAssoc EleAssocExitAction none (rstate,exitAction).
+
+Definition rstate2 : AsEnd :=
+  BAsEnd "state" State (Nat 1) Star.
+Definition entryAction : AsEnd :=
+  BAsEnd "entryAction" EntryAction (Nat 1) (Nat 1).
+Definition entry_Action : Assoc :=
+  BAssoc EleAssocEntryAction none (rstate2,entryAction).
+
+Definition Action_ExitAction :=
+  BGen Action ExitAction.
+Definition Action_EntryAction :=
+  BGen Action EntryAction.
+
+Definition auto3 : SimpleUML := mkSimpleUML
+  [State;InitState;FinalState;Transition;ExitAction;EntryAction;Action]
+  [isActive;label]
+  [DString;DBoolean]
+  [outTransition;inTransition;exit_Action;entry_Action]
+  [State_InitState;State_FinalState;Action_EntryAction;Action_ExitAction].
+
