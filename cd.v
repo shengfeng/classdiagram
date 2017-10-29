@@ -18,6 +18,7 @@ Import ListNotations.
 Open Scope list_scope.
 
 (** ##### the structute of metamodel of class diagram #### **)
+
 (** ----- basic element ----- **)
 Inductive NamedElement : Set :=
 | BNamedElement (oid: nat) (name : string).
@@ -73,6 +74,7 @@ Record SimpleUML : Set :=
     }.
 
 
+(* ----- Equality Judgement ----- *)
 Definition eqClassifier_dec : forall x y: Classifier, {x = y} + {x <> y}.
   repeat decide equality.
 Defined.
@@ -147,21 +149,49 @@ Definition beqGen g g' :=
 (** ---------- Functions --------- **)
 
 (** --- get all parents --- **)
-Fixpoint parents (c : Class) (l : list Gen) :=
+Fixpoint parents (l : list Gen) (c : Class) :=
 match l with
 | [] => []
 | (BGen p c') :: l' => if eqClass_dec c c' 
-                       then [p] 
-                       else parents c  l'
+                       then [p]
+                       else parents l' c
 end.
 
 
-(*
-Fixpoint all_parents (c : Class) (l : list Gen) :=
-match l with
-| [] => [] 
+Fixpoint deduplicate (ls : list Class) :=
+  match ls with
+  | [] => []
+  | x :: [] => [x]
+  | x :: ((y :: ys) as xs)
+    => if eqClass_dec x y
+       then deduplicate xs
+       else x :: deduplicate xs
+  end.
 
+Require Import Coq.Sorting.Mergesort.
+Require Import Coq.Lists.List.
+
+Print flat_map.
+
+(*
+Definition deduplicate (ls : list Class) := 
+deduplicate' (sort ls).
 *)
+
+Definition parents_step (l : list Gen) (cs : list Class) :=
+  deduplicate (cs ++ List.flat_map (parents l) cs).
+
+Fixpoint all_parents' (l : list Gen) (cs : list Class) (fuel : nat) :=
+  match fuel with
+  | 0 => cs
+  | S fuel'
+    => all_parents' l (parents_step l cs) fuel'
+  end.
+
+Definition all_parents (l : list Gen) (c : Class) :=
+  deduplicate (all_parents' l (parents l c) (List.length l)).
+
+Check all_parents.
 
 (** ------------------projection--------------------- **)
 
@@ -387,8 +417,8 @@ Definition nsc_AssocUniqueness (model : SimpleUML) : Prop :=
 
 Definition NotSelfGenralization (model : SimpleUML) : Prop :=
   forall g: Gen, (In g (Gen_Instances model)) ->
-    beqClass (Gen_src g) (Gen_dest g) = false.
-
+    let sub := Gen_dest g in
+    ~ In sub (all_parents (Gen_Instances model) sub).
 
 (** ----- well formed ----- **)
 
