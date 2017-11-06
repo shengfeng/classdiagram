@@ -231,10 +231,13 @@ Functional Scheme getEvts_ind :=
 
 (* get kind from event *)
 Definition getKd (e : evt) : kd := fst (fst (fst e)).
+
 (* get transmitter's lifeline from event *)
 Definition getTrLf(e : evt) : lf := (snd (fst e)).
+
 (* get receiver's lifeline from event *)
 Definition getReLf(e : evt) : lf := snd e.
+
 (* get the lifeline set from a sequence diagram *)
 Fixpoint getLfs (d : sd) : set lf :=
 match d with
@@ -247,6 +250,7 @@ match d with
 |DSeq SD1 SD2 => set_union lf_dec (getLfs SD1)  (getLfs SD2)
 |Dloop c n SD => getLfs SD
 end.
+
 Functional Scheme getLfs_ind :=
    Induction for getLfs Sort Prop.
 

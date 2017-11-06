@@ -27,9 +27,9 @@ Inductive OclClassifier :=
 | OCLMessage : string -> OclClassifier
 | OCLVoid : OclClassifier
 | OCLInvalid : OclClassifier
-| OCLInt : nat -> OclClassifier
-| OCLString : string -> OclClassifier
-| OCLBoolean : bool -> OclClassifier
+| OCLInt : option nat -> OclClassifier
+| OCLString : option string -> OclClassifier
+| OCLBoolean : option bool -> OclClassifier
 | OCLClass : Class -> OclClassifier
 | OCLSet : OclClassifier
 | OCLOrdSet : OclClassifier
@@ -105,22 +105,23 @@ Definition OCLConstraints := list Constraint.
 
 Section Example.
 
-Print string.
+  Print string.
 
-Definition active : string := "isActive".
+  Open Scope string_scope.
 
-Definition oe1 : oclexpr := BOOL 
-  (eq (VAR active) (LIT (OCLBoolean false))).
+  Definition active : string := "isActive".
 
-Parameter Customer : Class.
+  Definition oe1 : oclexpr :=
+    BOOL (eq (VAR active) (LIT (OCLBoolean (Some false)))).
 
-Definition c1 : Constraint :=
-  CONS (OCLClass Customer) Inv oe1.
+  Parameter Customer : Class.
 
-Definition lstOcl := [c1].
+  Definition c1 : Constraint :=
+    CONS (OCLClass Customer) Inv oe1.
+
+  Definition lstOcl := [c1].
 
 End Example.
-
 
 
 (* definitions for arithmetic expression and boolean expression *)
@@ -151,6 +152,7 @@ Fixpoint aeval (st : state) (e : aexp) {struct e} : nat :=
   | AMinus a1 a2  => minus (aeval st a1) (aeval st a2)
   | AMult a1 a2 => mult (aeval st a1) (aeval st a2)
   end.
+
 
 Fixpoint ble_nat (n m : nat) {struct n} : bool :=
   match n with

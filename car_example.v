@@ -19,20 +19,20 @@ Definition class_list :=
   [c1; c2; c3; c4; c5; c6; c7; c8; c9].
 
 (* ----- attributes ------ *)
-Definition a1 : attribute := (Id 21, "firstname", string_, c7).
-Definition a2 : attribute := (Id 22, "lastname", string_, c7).
-Definition a3 : attribute := (Id 23, "age", integer, c7).
-Definition a4 : attribute := (Id 24, "isMarried", boolean, c7).
-Definition a5 : attribute := (Id 25, "email", string_, c7).
-Definition a6 : attribute := (Id 26, "address", string_, c5).
-Definition a7 : attribute := (Id 27, "salary", real, c6).
-Definition a8 : attribute := (Id 28, "location", string_, c1).
-Definition a9 : attribute := (Id 29, "fromDay", string_, c8).
-Definition a10 : attribute := (Id 30, "untilDay", string_, c8).
-Definition a11 : attribute := (Id 31, "id", integer, c2).
-Definition a12 : attribute := (Id 32, "kind", string_, c3).
-Definition a13 : attribute := (Id 33, "description", string_, c4).
-Definition a14 : attribute := (Id 34, "location", string_, c9).
+Definition a1 : attribute := (Id 21, "firstname", pstring, c7).
+Definition a2 : attribute := (Id 22, "lastname", pstring, c7).
+Definition a3 : attribute := (Id 23, "age", pinteger, c7).
+Definition a4 : attribute := (Id 24, "isMarried", pboolean, c7).
+Definition a5 : attribute := (Id 25, "email", pstring, c7).
+Definition a6 : attribute := (Id 26, "address", pstring, c5).
+Definition a7 : attribute := (Id 27, "salary", preal, c6).
+Definition a8 : attribute := (Id 28, "location", pstring, c1).
+Definition a9 : attribute := (Id 29, "fromDay", pstring, c8).
+Definition a10 : attribute := (Id 30, "untilDay", pstring, c8).
+Definition a11 : attribute := (Id 31, "id", pinteger, c2).
+Definition a12 : attribute := (Id 32, "kind", pstring, c3).
+Definition a13 : attribute := (Id 33, "description", pstring, c4).
+Definition a14 : attribute := (Id 34, "location", pstring, c9).
 
 Definition attr_list :=
   [a1; a2; a3; a4; a5; a6; a7; a8; a9; a10; a11; a12; a13; a14].
@@ -128,9 +128,11 @@ Compute (all_navends c2 (partipating c2 assoc_list) role_list).
 (* ----- generalization ------ *)
 Definition g1 : generalization := (Id 130, c7, c5).
 Definition g2 : generalization := (Id 131, c7, c6).
+(* ------ test ----- *)
+Definition g3 := (Id 121, c6, c4).
 
 Definition gen_list :=
-  [g1; g2].
+  [g1; g2; g3].
 
 
 Eval simpl in (children gen_list c7).
@@ -139,18 +141,42 @@ Compute (children gen_list c7).
 Eval simpl in (parents gen_list c5).
 Compute (parents gen_list c5).
 
+Eval simpl in (all_parents gen_list c4).
+Compute (all_parents gen_list c4).
+
+Definition t1 := all_parents gen_list c4.
+
+Compute t1.
+
+Require Import Arith.
+
+Compute leb (count_occ class_dec t1 c7) 1.
+
+Print deduplicate.
 
 Definition carModel :=
   mkCD class_list attr_list assoc_list role_list multip_list gen_list.
 
 
+Print NoDup.
+
 Lemma unique_class :
   UniqueClass carModel.
 Proof.
   unfold UniqueClass. simpl.
-  unfold c1, c2, c3, c4, c5, c6, c7, c8, c9.
+  unfold c1, c2, c3, c4, c5, c6, c7, c8, c9, class_name.
+  simpl.
   apply NoDup_cons.
-  simpl in *.
+  + simpl. intros contra.
+    inversion contra. inversion H.
+    inversion H. discriminate.
+    inversion H0. discriminate.
+    inversion H1. discriminate.
+    inversion H2. discriminate.
+    inversion H3. discriminate.
+    inversion H4. discriminate.
+    inversion H5. discriminate.
+    assumption.
 Admitted.  
 
 
@@ -168,8 +194,8 @@ Compute (obj_domain c7 gen_list ob_list).
 Compute (obj_domain c6 gen_list ob_list).
 
 
-Eval simpl in oid ob_list c1.
-Eval simpl in oid ob_list c6.
+Compute (oid ob_list c1).
+Compute (oid ob_list c6).
 
 (* ----- link ----- *)
 Definition l1 : link := (Id 111, [ob1; ob2], s7).
@@ -186,11 +212,11 @@ Eval simpl in (lid s7 link_list).
 Eval simpl in (lid s1 link_list).
 
 
-Definition atval1 : attrval := (Id 200, a14, "Berlin", ob1).
-Definition atval2 : attrval := (Id 201, a1, "John", ob2).
-Definition atval3 : attrval := (Id 202, a2, "Clark", ob2).
-Definition atval4 : attrval := (Id 203, a3, "47", ob2).
-Definition atval5 : attrval := (Id 204, a4, "true", ob2).
+Definition atval1 : attrval := (Id 200, a14, String (Some "Berlin"), ob1).
+Definition atval2 : attrval := (Id 201, a1, String (Some "John"), ob2).
+Definition atval3 : attrval := (Id 202, a2, String (Some "Clark"), ob2).
+Definition atval4 : attrval := (Id 203, a3, Integer (Some 47), ob2).
+Definition atval5 : attrval := (Id 204, a4, Boolean (Some true), ob2).
 
 
 Definition attrval_list :=
@@ -200,4 +226,14 @@ Definition carInstance :=
   mkObj ob_list link_list attrval_list.
 
 
+(*
+Theorem plus_ex :
+  forall n m, n + m = m + n.
+Proof.
+  induction n; simpl.
+  + symmetry. apply plus_0_r. 
+  + intros m. rewrite <- plus_n_Sm.
+    rewrite IHn; reflexivity.
+Qed.
+*)
 

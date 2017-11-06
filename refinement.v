@@ -7,7 +7,10 @@ Open Scope string_scope.
 Open Scope list_scope.
 Import ListNotations.
 
+
+(* ----- intergrate two class ------- *)
 Parameter R : Class -> Class -> Class -> list Assoc.
+
 Parameter CA : Class -> Class -> assocKind -> Assoc.
 
 Print AsEnd.
@@ -17,8 +20,8 @@ Definition CreateAsEnd (c : Class) :=
 
 Print Assoc.
 
-Definition CreateAssoc (n : NamedElement) (c1 c2 : Class) :=
-  BAssoc n none (CreateAsEnd c1, CreateAsEnd c2).
+Definition CreateAssoc (ne : NamedElement) (c1 c2 : Class) :=
+  BAssoc ne none (CreateAsEnd c1, CreateAsEnd c2).
 
 
 Inductive refineone : SimpleUML -> SimpleUML -> Prop :=

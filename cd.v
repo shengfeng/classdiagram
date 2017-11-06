@@ -10,7 +10,6 @@ Require Import List.
 Require Import String.
 Require Import ListSet.
 Require Import Arith.
-Require Import Nat.
 Require Import Peano_dec.
 
 Import ListNotations.
@@ -21,7 +20,7 @@ Open Scope list_scope.
 
 (** ----- basic element ----- **)
 Inductive NamedElement : Set :=
-| BNamedElement (oid: nat) (name : string).
+| BNamedElement : nat -> string -> NamedElement.
 
 (** ----- classifier ----- **)
 Inductive Classifier : Set :=
@@ -149,12 +148,12 @@ Definition beqGen g g' :=
 (** ---------- Functions --------- **)
 
 (** --- get all parents --- **)
-Fixpoint parents (l : list Gen) (c : Class) :=
+Fixpoint parents' (l : list Gen) (c : Class) :=
 match l with
 | [] => []
 | (BGen p c') :: l' => if eqClass_dec c c' 
-                       then [p]
-                       else parents l' c
+                       then p :: parents' l' c
+                       else parents' l' c
 end.
 
 
@@ -162,11 +161,14 @@ Fixpoint deduplicate (ls : list Class) :=
   match ls with
   | [] => []
   | x :: [] => [x]
-  | x :: ((y :: ys) as xs)
-    => if eqClass_dec x y
+  | x :: xs
+    => if leb (count_occ eqClass_dec ls x) 1
        then deduplicate xs
        else x :: deduplicate xs
   end.
+
+
+Check parents'.
 
 Require Import Coq.Sorting.Mergesort.
 Require Import Coq.Lists.List.
@@ -178,8 +180,9 @@ Definition deduplicate (ls : list Class) :=
 deduplicate' (sort ls).
 *)
 
+
 Definition parents_step (l : list Gen) (cs : list Class) :=
-  deduplicate (cs ++ List.flat_map (parents l) cs).
+  deduplicate (cs ++ List.flat_map (parents' l) cs).
 
 Fixpoint all_parents' (l : list Gen) (cs : list Class) (fuel : nat) :=
   match fuel with
@@ -188,10 +191,10 @@ Fixpoint all_parents' (l : list Gen) (cs : list Class) (fuel : nat) :=
     => all_parents' l (parents_step l cs) fuel'
   end.
 
-Definition all_parents (l : list Gen) (c : Class) :=
-  deduplicate (all_parents' l (parents l c) (List.length l)).
+Definition parents (l : list Gen) (c : Class) :=
+  deduplicate (all_parents' l (parents' l c) (List.length l)).
 
-Check all_parents.
+Check parents.
 
 (** ------------------projection--------------------- **)
 
@@ -418,7 +421,7 @@ Definition nsc_AssocUniqueness (model : SimpleUML) : Prop :=
 Definition NotSelfGenralization (model : SimpleUML) : Prop :=
   forall g: Gen, (In g (Gen_Instances model)) ->
     let sub := Gen_dest g in
-    ~ In sub (all_parents (Gen_Instances model) sub).
+    ~ In sub (parents (Gen_Instances model) sub).
 
 (** ----- well formed ----- **)
 

@@ -10,24 +10,26 @@ Require Import List.
 Require Import String.
 Require Import ListSet.
 Require Import Arith.
-Require Import Nat.
 Require Import Peano_dec.
 
 Require Import cd.
 
 Import ListNotations.
 
+
 Inductive Object := 
 | BObject: string -> Object.
+
 
 Inductive Link :=
 | BLink: string -> Link.
 
 
-Definition eqObject_dec : forall x y: Object, 
-  {x = y} + {x <> y}.
+Definition eqObject_dec :
+  forall x y: Object, {x = y} + {x <> y}.
   repeat decide equality.
 Defined.
+
 
 Definition beqObject o o' :=
   match eqObject_dec o o' with
@@ -45,12 +47,18 @@ Definition beqLink l l' :=
   | right _ => false
   end.
 
+
+Print SimpleUML.
+Print Class.
+
+Open Scope type_scope.
+
 (** ----- pair (class, objects) ----- *)
-Definition VObject: Set := (Class * list Object).
+Definition VObject: Set := Class * list Object.
 
-Definition VLink: Set := (Assoc * list Link).
+Definition VLink: Set := Assoc * list Link.
 
-Definition VEnd: Set := (Link * Object * Object).
+Definition VEnd: Set := Link * Object * Object.
 
 Record State : Set :=
   mkState {
@@ -60,6 +68,7 @@ Record State : Set :=
       vlinks : list VLink;
       vends : list VEnd
   }.
+
 
 Definition VObject_object (o : VObject) := snd o.
 
@@ -89,7 +98,6 @@ Definition VEnd_link (o : VEnd) := fst (fst o).
 
 Check VEnd_link.
 
-
 (* ----- Component ----- *)
 Inductive Component : Type :=
 | cclass : Class -> Component
@@ -105,23 +113,33 @@ Inductive Component : Type :=
 Definition Sat_class (c: Class) (s : State) : Prop :=
   In c (map VObject_class (vobjects s)).
 
-Parameter s: State.
-Parameter g: Gen.
+
+Variable s: State.
+Variable g: Gen.
+
 
 (** get the objects of class c in l **)
 Fixpoint mapObject (c : Class) (l : list VObject) : list Object :=
   match l with
   | nil => nil
-  | o :: l' => if beqClass c (VObject_class o) then VObject_object o
+  | o :: l' => if beqClass c (VObject_class o)
+               then VObject_object o
                else mapObject c l'
   end.
+
+
+(*
+Definition obj_domain (c : class) (lg : list generalization) (lo : list VObject) :=
+  (mapObject c lo) ++ List.flat_map (oid lo) (children lg c).
+*)
 
 (** get the links of association a **)
 Fixpoint mapLink (a : Assoc) (l : list VLink) : list Link :=
   match l with
   | nil => nil
-  | o :: l' => if beqAssoc a (VLink_assoc o) then VLink_link o
-              else mapLink a l'
+  | o :: l' => if beqAssoc a (VLink_assoc o)
+               then VLink_link o
+               else mapLink a l'
   end.
 
 
@@ -129,15 +147,18 @@ Fixpoint mapLink (a : Assoc) (l : list VLink) : list Link :=
 Fixpoint mapVend_src (l : list VEnd) (r : Link) : list Object :=
   match l with
   | nil => nil
-  | v :: l' => if beqLink (VEnd_link v) r then VEnd_src v :: mapVend_src l' r 
-              else mapVend_src l' r
+  | v :: l' => if beqLink (VEnd_link v) r
+               then VEnd_src v :: mapVend_src l' r 
+               else mapVend_src l' r
   end.
+
 
 Fixpoint mapVend_dest (l :list VEnd) (r : Link) : list Object :=
   match l with
   | nil => nil
-  | v :: l' => if beqLink (VEnd_link v) r then VEnd_dest v :: mapVend_dest l' r
-              else mapVend_dest l' r
+  | v :: l' => if beqLink (VEnd_link v) r
+               then VEnd_dest v :: mapVend_dest l' r
+               else mapVend_dest l' r
   end.
 
 
@@ -147,47 +168,18 @@ Fixpoint links_objects_src (ll: list Link) (lr : list VEnd) :=
   | l :: ll' => app (mapVend_src lr l) (links_objects_src ll' lr)
   end.
 
+
 Fixpoint links_objects_dest (ll: list Link) (lr : list VEnd) :=
   match ll with
   | nil => nil
   | l :: ll' => app (mapVend_dest lr l) (links_objects_dest ll' lr)
   end.
 
-(** ----- get the super class directly ----- **)
-Fixpoint parents (lg : list Gen) (c : Class) :=
-  match lg with
-  | nil => nil
-  | g :: l => if beqClass c (Gen_dest g) 
-              then (Gen_src g) :: (parents l c)
-              else parents l c
-  end.
-
-(*
-Definition allparents (c : Class) (lg : list Gen) :=
-  map (parents lg) lc.
-
-Check allparents.
-*)
+Print parents.
 
 Section GExample.
 
-  Definition n1 := BNamedElement 1 "n1".
-  Definition n2 := BNamedElement 2 "n2".
-  Definition n3 := BNamedElement 3 "n3".
-  Definition n4 := BNamedElement 4 "n4".
-  Definition n5 := BNamedElement 5 "n5".
-
-  Definition cl1 := BClassifier n1.
-  Definition cl2 := BClassifier n2.
-  Definition cl3 := BClassifier n3.
-  Definition cl4 := BClassifier n4.
-  Definition cl5 := BClassifier n5.
-
-  Definition c1 := BClass cl1 false nil.
-  Definition c2 := BClass cl2 false nil.
-  Definition c3 := BClass cl3 false nil.
-  Definition c4 := BClass cl4 false nil.
-  Definition c5 := BClass cl5 false nil.
+  Variable c1 c2 c3 c4 c5 : Class.
 
   Definition G1 : Gen := BGen c1 c2.
   Definition G2 : Gen := BGen c1 c3.
@@ -199,8 +191,9 @@ Section GExample.
   Eval simpl in (Gen_dest G1).
   Eval simpl in (Gen_src G1).
 
-  Eval simpl in (parents G c4).
-  (* Eval simpl in (allparents G ()). *)
+  Compute (parents' G c4).
+  Compute (parents G c4).
+   
 
 End GExample.
 
