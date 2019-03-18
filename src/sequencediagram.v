@@ -224,8 +224,8 @@ match d with
 end.
 
 
-Functional Scheme getEvts_ind :=
-   Induction for getEvts Sort Prop.
+(* Functional Scheme getEvts_ind :=
+   Induction for getEvts Sort Prop. *)
 
 (*=====Auxiliary functions, used in Weak Sequence=======*)
 
@@ -251,8 +251,8 @@ match d with
 |Dloop c n SD => getLfs SD
 end.
 
-Functional Scheme getLfs_ind :=
-   Induction for getLfs Sort Prop.
+(* Functional Scheme getLfs_ind :=
+   Induction for getLfs Sort Prop. *)
 
 (*--get related events from event set in particular lifeline*)
 Fixpoint projLf (l : lf) (se : set evt) : set evt :=
@@ -289,7 +289,8 @@ match l1 with
 |nil => nil
 |a :: tail => (map (fun b => f a b) l2) ++ strict f tail l2
 end.
-Functional Scheme strict_ind := Induction for strict Sort Prop.
+
+(* Functional Scheme strict_ind := Induction for strict Sort Prop. *)
 
 Definition strictOb (s1 s2: set tr) : set tr :=
    strict (@app _) s1 s2.
@@ -304,34 +305,38 @@ match s with
 |a :: tail=> if (beq_tr st a nil) then (nil::(addCndOb st c tail))
               else ((cd c) :: a) :: (addCndOb st c tail)
 end.
-Functional Scheme addCndOb_ind := Induction for addCndOb Sort Prop.
+
+(* Functional Scheme addCndOb_ind := Induction for addCndOb Sort Prop. *)
 
 Fixpoint addCndToMo (st : state)(c : cnd)(s : set (set tr)) : set (set tr) :=
 match s with
 |nil => nil
 |a :: tail=> (addCndOb st c a) :: (addCndToMo st c tail)
 end.
-Functional Scheme addCndToMo_ind := Induction for addCndToMo Sort Prop.
+
+(* Functional Scheme addCndToMo_ind := Induction for addCndToMo Sort Prop. *)
 
 Fixpoint altMoAux2 (st1 : set tr)(s2 : set (set tr)) :=
 match s2 with
 |nil => nil
 |a :: tail =>  (st1 ++ a) :: altMoAux2 st1 tail
 end.
-Functional Scheme altMoAux2_ind := Induction for altMoAux2 Sort Prop.
+
+(* Functional Scheme altMoAux2_ind := Induction for altMoAux2 Sort Prop. *)
 
 Fixpoint altMoaux (s1 s2: set (set tr)) :=
 match s1 with 
 |nil => nil
 |a :: tail => altMoAux2 a s2 ++ altMoaux tail s2
 end.
-Functional Scheme altMoaux_ind := Induction for altMoaux Sort Prop.
+
+(* Functional Scheme altMoaux_ind := Induction for altMoaux Sort Prop. *)
 
 Definition altMo (st : state)(c : cnd)(s1 s2: set (set tr)): set (set tr) :=
 if (beq_mo st s1 s2) then s1
    else altMoaux (addCndToMo st c s1) (addCndToMo st (Bnot c) s2).
-Functional Scheme altMo_ind :=
-    Induction for altMo Sort Prop.
+
+(* Functional Scheme altMo_ind := Induction for altMo Sort Prop. *)
 
 (*------3.Opt-------*)
 Definition optMo (st : state)(c : cnd)(s : set (set tr)) : set (set tr) :=
@@ -339,7 +344,8 @@ match s with
 |(nil :: nil) :: nil => (nil :: nil) :: nil
 | _ =>  set_union ob_dec (addCndToMo st c s) ((nil :: nil) :: nil)
 end.
-Functional Scheme optMo_ind := Induction for optMo Sort Prop.
+
+(* Functional Scheme optMo_ind := Induction for optMo Sort Prop. *)
 
 (*------4.Par---------*)
 Fixpoint combListAuxAux (o1 : set tr)(l : set (set tr)) : set (set tr):=
@@ -347,15 +353,16 @@ match o1 with
 |nil => nil
 |t :: tail => (map (set_add tr_dec t ) l) ++ (combListAuxAux tail l)
 end.
-Functional Scheme combListAuxAux_ind :=
-    Induction for combListAuxAux Sort Prop.
+
+(* Functional Scheme combListAuxAux_ind := Induction for combListAuxAux Sort Prop. *)
 
 Fixpoint combList (l : set (set tr)) : set (set tr) :=
 match l with 
 |nil => nil :: nil
 |o1 :: tail=> combListAuxAux o1 (combList tail)
 end.
-Functional Scheme combList_ind := Induction for combList Sort Prop.
+
+(* Functional Scheme combList_ind := Induction for combList Sort Prop. *)
 
 (* add event to obligation *)
 Fixpoint addEvtOb (e : tk) (o : set tr) : set tr :=
@@ -388,8 +395,8 @@ match s1 with
 | t1::tail1 => set_union ob_dec (intlevObAux2 t1 s2) (intlevObAux tail1 s2)
 end.
 
-Functional Scheme intlevObAux2_ind := Induction for intlevObAux2 Sort Prop.
-Functional Scheme intlevObAux_ind := Induction for intlevObAux Sort Prop.
+(* Functional Scheme intlevObAux2_ind := Induction for intlevObAux2 Sort Prop.
+Functional Scheme intlevObAux_ind := Induction for intlevObAux Sort Prop. *)
 
 Definition intlevOb (s1 s2: set tr) : set (set tr) :=
    combList (intlevObAux s1 s2).
@@ -399,14 +406,16 @@ match s2 with
 | nil => nil
 | t2 :: tail2 => set_union ob_dec (intlevOb t1 t2) (parMoAux t1 tail2)
 end.
-Functional Scheme parMoAux_ind := Induction for parMoAux Sort Prop.
+
+(* Functional Scheme parMoAux_ind := Induction for parMoAux Sort Prop. *)
 
 Fixpoint parMo(s1 s2 : set (set tr)) : set (set tr) :=
 match s1 with
 | nil => nil
 | t1 :: tail1 => set_union ob_dec (parMoAux  t1 s2) (parMo tail1 s2)
 end.
-Functional Scheme parMo_ind := Induction for parMo Sort Prop.
+
+(* Functional Scheme parMo_ind := Induction for parMo Sort Prop. *)
 
 (*----------5.Weak Sequence-------*)
 Fixpoint filter (evs : set evt) (t : tr) {struct t} : tr :=
@@ -455,15 +464,14 @@ match s with
 |nil => nil
 |t :: tail => set_add ob_dec (seqAux st es ls s1 s2 t) (seqObAux st es ls s1 s2 tail)
 end.
-Functional Scheme seqObAux_ind:=
-   Induction for seqObAux Sort Prop.
+
+(* Functional Scheme seqObAux_ind:= Induction for seqObAux Sort Prop. *)
 
 (*based on seqObAux and intlevOb*)
 Definition seqOb (st : state)(se : set evt)(ls : set lf)(s1 s2 : set tr) :set (set tr ) :=
   seqObAux st se ls s1 s2 (intlevOb s1 s2).
 
-Functional Scheme seqOb_ind :=
-   Induction for seqOb Sort Prop.
+(* Functional Scheme seqOb_ind := Induction for seqOb Sort Prop. *)
 
 Fixpoint seqMoAux (st : state)(se : set evt)(ls : set lf)(t1 : set tr)(s2 : set (set tr))
  : set (set tr) :=
@@ -471,8 +479,8 @@ match s2 with
 |nil => nil
 |t2 :: tail2 => set_union ob_dec (seqOb st se ls t1 t2) (seqMoAux st se ls t1 tail2)
 end.
-Functional Scheme seqMoAux_ind :=
-   Induction for seqMoAux Sort Prop.
+
+(* Functional Scheme seqMoAux_ind := Induction for seqMoAux Sort Prop. *)
 
 Fixpoint seqMo (st : state)(se : set evt)(ls : set lf)(s1 s2: set (set tr))
  : set (set tr) :=
@@ -481,8 +489,7 @@ match s1 with
 |t1 :: tail1 => set_union ob_dec (seqMoAux st se ls t1 s2) (seqMo st se ls tail1 s2)
 end.
 
-Functional Scheme seqMo_ind :=
-   Induction for seqMo Sort Prop.
+(* Functional Scheme seqMo_ind := Induction for seqMo Sort Prop. *)
 
 (*------6.Loop-------*)
 Open Scope nat_scope.
@@ -554,7 +561,7 @@ end.
 Eval compute in loopMo empty_state Btrue 3 ((nil::nil)::nil).
 
 
-Functional Scheme loopMo_ind := Induction for loopMo Sort Prop.
+(* Functional Scheme loopMo_ind := Induction for loopMo Sort Prop. *)
 
 (*-----Definition of Denotational Functions--*)
 Fixpoint interp (st : state)(d : sd) {struct d} : mo :=
@@ -571,7 +578,7 @@ match d with
 |Dloop c n SD  => loopMo st c n (interp st SD)
 end.
 
-Functional Scheme interp_ind := Induction for interp Sort Prop.
+(* Functional Scheme interp_ind := Induction for interp Sort Prop. *)
 
 (*test cases of interp*)
 Definition f1 := (!, "m", "l1", "l2").

@@ -149,12 +149,11 @@ Definition entryexit_dec : forall (a b : entryexit), {a = b} + {a <> b}.
 Defined.
 
 Definition sc_dec : forall (a b : sc), {a = b} + {a <> b}.
-  fix 1.
   repeat decide equality.
 Defined.
 
 Definition trans_dec : forall (a b : trans), {a = b} + {a <> b}.
-  fix 1.    
+  fix 1.
   repeat decide equality. 
 Defined.
 

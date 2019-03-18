@@ -11,18 +11,15 @@ Import ListNotations.
 (* ----- intergrate two class ------- *)
 Parameter R : Class -> Class -> Class -> list Assoc.
 
-Parameter CA : Class -> Class -> assocKind -> Assoc.
+Parameter CA : Class -> Class -> asKind -> Assoc.
 
-Print AsEnd.
 
 Definition CreateAsEnd (c : Class) :=
-  BAsEnd "_" c (Nat 0) Star.
+  BAsEnd "_" c (Nat 0, Star).
 
-Print Assoc.
 
 Definition CreateAssoc (ne : NamedElement) (c1 c2 : Class) :=
   BAssoc ne none (CreateAsEnd c1, CreateAsEnd c2).
-
 
 Inductive refineone : SimpleUML -> SimpleUML -> Prop :=
 | import:  forall c' ci cj C T P S G,
@@ -74,8 +71,10 @@ Inductive refine : SimpleUML -> SimpleUML -> Prop :=
 .
 
 Theorem wellFormed_preserve :
-  forall m1 m2, WellFormed m1 -> refineone m1 m2 ->
-           WellFormed m2.
+  forall m1 m2, 
+    WellFormed m1 -> 
+    refineone m1 m2 ->
+    WellFormed m2.
 Proof.
   intros m1 m2 H1 H2.
   inversion H1. unfold UniqueClass in H.
@@ -83,6 +82,7 @@ Proof.
 Admitted.
 
 Require Import Relations.
+
 
 Theorem refine_refl :
    reflexive _  refine.

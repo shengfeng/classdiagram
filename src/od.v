@@ -14,6 +14,7 @@ Require Import Peano_dec.
 
 Require Import cd.
 
+
 Import ListNotations.
 
 
@@ -37,9 +38,11 @@ Definition beqObject o o' :=
   | right _ => false
   end.
 
+
 Definition eqLink_dec : forall x y: Link, {x = y} + {x <> y}.
   repeat decide equality.
 Defined.
+
 
 Definition beqLink l l' :=
   match eqLink_dec l l' with
@@ -47,9 +50,6 @@ Definition beqLink l l' :=
   | right _ => false
   end.
 
-
-Print SimpleUML.
-Print Class.
 
 Open Scope type_scope.
 
@@ -72,31 +72,24 @@ Record State : Set :=
 
 Definition VObject_object (o : VObject) := snd o.
 
-Check VObject_object.
 
 Definition VObject_class (o : VObject) := fst o.
 
-Check VObject_class.
 
 Definition VLink_link (o : VLink) := snd o.
 
-Check VLink_link.
 
 Definition VLink_assoc (o : VLink) := fst o.
 
-Check VLink_assoc.
 
 Definition VEnd_src (o : VEnd) : Object := snd (fst o).
 
-Check VEnd_src.
 
 Definition VEnd_dest (o : VEnd) : Object := snd o.
 
-Check VEnd_dest.
 
 Definition VEnd_link (o : VEnd) := fst (fst o).
 
-Check VEnd_link.
 
 (* ----- Component ----- *)
 Inductive Component : Type :=
@@ -105,17 +98,13 @@ Inductive Component : Type :=
 | cassociation : Assoc -> Component
 | cgeneralization : Gen -> Component
 | cabstract : Class -> list Class -> Component
-| cnonabstract : Class -> list Class -> Component
-.
+| cnonabstract : Class -> list Class -> Component.
+
 
 
 (** every object o in s is the instance of a class c **)
 Definition Sat_class (c: Class) (s : State) : Prop :=
   In c (map VObject_class (vobjects s)).
-
-
-Variable s: State.
-Variable g: Gen.
 
 
 (** get the objects of class c in l **)
@@ -191,11 +180,11 @@ Section GExample.
   Eval simpl in (Gen_dest G1).
   Eval simpl in (Gen_src G1).
 
-  Compute (parents' G c4).
-  Compute (parents G c4).
-   
+  (* Compute (parents' G c4). *)
+  (* Compute (parents G c4). *)
 
 End GExample.
+
 
 (** only direct Generalization **)
 Definition Sat_gen (g: Gen) (s : State) :=
@@ -206,6 +195,7 @@ Definition Sat_gen (g: Gen) (s : State) :=
     In p (mapObject super (vobjects s)).
 
 
+
 (** get subset **)
 Fixpoint unionSet (sub: list Class) (l : list VObject) :=
   match sub with
@@ -213,7 +203,6 @@ Fixpoint unionSet (sub: list Class) (l : list VObject) :=
   | c :: sub' => set_union eqObject_dec (mapObject c l) (unionSet sub' l)
   end.
 
-Check unionSet.
 
 Definition csabstract (c : Class) :=
   Class_abstract c = true.
@@ -224,7 +213,6 @@ Definition Sat_abstract (c : Class) (sub : list Class) (s : State) :=
 
 Definition ncsabstract (c : Class) :=
   Class_abstract c = false.
-
 
 Definition dom (st : State) (a : Assoc) :=
   let lks := mapLink a (vlinks st) in
@@ -249,6 +237,7 @@ Definition blt_eq (n : nat) (m : Natural) : bool :=
   | Star => true
   | Nat x => if leb n x then true else false
   end.
+
 
 Compute (blt_eq 2 Star).
 Compute (blt_eq 2 (Nat 4)).

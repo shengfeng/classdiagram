@@ -95,10 +95,10 @@ Definition Order : Class :=
   BClass ClfOrder false [AttrOrderDate;AttrPrice;AttrOrderType].
 
 Definition order2customer : AsEnd := 
-  BAsEnd "orders" Order (Nat 0) Star.
+  BAsEnd "orders" Order (Nat 0, Star).
 
 Definition customer2order : AsEnd := 
-  BAsEnd "customer" Order (Nat 1) (Nat 1).
+  BAsEnd "customer" Order (Nat 1, Nat 1).
 
 Definition aCustomerOrder :=
   BAssoc EleOwn none (order2customer, customer2order). 
@@ -141,10 +141,10 @@ Definition CreditCard : Class :=
   BClass ClfCreditCard false [].
 
 Definition payment2customer: AsEnd := 
-  BAsEnd "payment" Payment (Nat 0) Star.
+  BAsEnd "payment" Payment (Nat 0, Star).
 
 Definition customer2payment : AsEnd :=
-  BAsEnd "customer" Customer (Nat 1) (Nat 1).
+  BAsEnd "customer" Customer (Nat 1, Nat 1).
 
 Definition aCustomerPayment: Assoc :=
   BAssoc ElePay none (payment2customer, customer2payment).

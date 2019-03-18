@@ -36,8 +36,10 @@ Inductive DataType : Set :=
 
 (** ----- attribute, primitive data type, class ----- **)
 Inductive Attribute : Set :=
-| BAttribute : NamedElement -> Classifier -> Attribute
-with Class : Set :=
+| BAttribute : NamedElement -> Classifier -> Attribute.
+
+
+Inductive Class : Set :=
 | BClass : Classifier -> bool -> list Attribute -> Class.
 
 
@@ -47,19 +49,21 @@ Inductive Natural :=
 | Star : Natural.
 
 Inductive AsEnd : Set :=
-| BAsEnd (name:string) (attached:Class) (lower: Natural) (upper: Natural).
+| BAsEnd: string -> Class -> (Natural * Natural) -> AsEnd.
 
 (** ----- association ----- **)
-Inductive assocKind : Set :=
-| none : assocKind       | directed : assocKind
-| aggregate : assocKind  | composite : assocKind.
+Inductive asKind : Set :=
+| none : asKind
+| directed : asKind
+| aggregate : asKind
+| composite : asKind.
 
 Inductive Assoc : Set :=
-| BAssoc: NamedElement -> assocKind -> (AsEnd * AsEnd) -> Assoc.
+| BAssoc: NamedElement -> asKind -> (AsEnd * AsEnd) -> Assoc.
 
 (** ----- generalization ----- **)
 Inductive Gen : Set :=
-| BGen (super : Class) (sub : Class).
+| BGen : Class -> Class -> Gen.
 
 (** ------------------------------- **)
 (** -------- Source Model --------- **)
@@ -168,17 +172,8 @@ Fixpoint deduplicate (ls : list Class) :=
   end.
 
 
-Check parents'.
-
 Require Import Coq.Sorting.Mergesort.
 Require Import Coq.Lists.List.
-
-Print flat_map.
-
-(*
-Definition deduplicate (ls : list Class) := 
-deduplicate' (sort ls).
-*)
 
 
 Definition parents_step (l : list Gen) (cs : list Class) :=
@@ -194,8 +189,6 @@ Fixpoint all_parents' (l : list Gen) (cs : list Class) (fuel : nat) :=
 Definition parents (l : list Gen) (c : Class) :=
   deduplicate (all_parents' l (parents' l c) (List.length l)).
 
-Check parents.
-
 (** ------------------projection--------------------- **)
 
 (** ----- get named element oid ----- **)
@@ -204,11 +197,13 @@ Definition NamedElement_oid (o : NamedElement) : nat :=
     | (BNamedElement o _ ) => o
   end.
 
+
 (** ----- get named element name ----- **)
 Definition NamedElement_name (o : NamedElement) : string :=
   match o with
     | (BNamedElement _ n) => n
   end.
+
 
 (** ------ get the basis of attribute ----- **)
 Definition Attribute_super (a : Attribute) : NamedElement :=
@@ -216,8 +211,10 @@ Definition Attribute_super (a : Attribute) : NamedElement :=
     | BAttribute s _ => s
   end.
 
+
 Definition Attribute_name (a : Attribute) : string :=
   NamedElement_name (Attribute_super a).
+
 
 Definition Attribute_oid (a : Attribute) : nat :=
   NamedElement_oid (Attribute_super a).
@@ -295,26 +292,27 @@ Definition Gen_dest (g : Gen) : Class :=
 (** ------ get the name of association end ----- **)
 Definition AsEnd_name (a : AsEnd) : string :=
   match a with
-  | BAsEnd n _ _ _ => n
+  | BAsEnd n _ _  => n
   end.
 
 (** ------ get the attached class of association end ----- **)
 Definition AsEnd_class (a : AsEnd) : Class :=
   match a with
-  | BAsEnd  _ c _ _ => c
+  | BAsEnd  _ c _  => c
   end.
 
 (** ------ get the multipy of association ----- **)
 Definition AsEnd_lower (a : AsEnd) : Natural:=
   match a with
-    | BAsEnd _ _ l _ => l
+    | BAsEnd _ _ l => fst l
   end.
 
 
 Definition AsEnd_upper (a : AsEnd) : Natural:=
   match a with
-    | BAsEnd _ _ _ u => u
+    | BAsEnd _ _ l => snd l
   end.
+
 
 (** ----- get the name of association ------ **)
 Definition Assoc_super (a : Assoc) : NamedElement :=
@@ -326,10 +324,12 @@ Definition Assoc_super (a : Assoc) : NamedElement :=
 Definition Assoc_name (a : Assoc) : string :=
   NamedElement_name (Assoc_super a).
 
+
 Definition Assoc_oid (a : Assoc) : nat :=
   NamedElement_oid (Assoc_super a).
 
-Definition Assoc_kind (a : Assoc) : assocKind :=
+
+Definition Assoc_kind (a : Assoc) : asKind :=
   match a with
   | BAssoc _ k _ => k
   end.
@@ -341,9 +341,11 @@ Definition Assoc_node (a : Assoc) : AsEnd * AsEnd :=
     | BAssoc _ _ k => k
   end.
 
+
 (** ----- get the class of association ends ----- **)
 Definition Assoc_src (a : Assoc) : Class :=
   AsEnd_class (fst (Assoc_node a)).
+
 
 Definition Assoc_dest (a : Assoc) : Class :=
   AsEnd_class (snd (Assoc_node a)).
@@ -365,7 +367,6 @@ Definition Attribute_Instances (model : SimpleUML) :=
 
 Definition Gen_Instances (model : SimpleUML) :=
   MGen_Instance model.
-
 
 
 (** ###### Structural Constraints ##### **)
@@ -400,23 +401,26 @@ Definition UniqueAttrInClass (model : SimpleUML) : Prop :=
   forall o: Class,  (In o (Class_Instances model)) ->
     NoDup (Class_attribute o).
 
-Print NoDup.
-
 
 (** ##### Non-structural Contraints ##### **)
 
 Definition nsc_AttributeUniqueness (model : SimpleUML) : Prop :=
-  forall o : Class, (In o (Class_Instances model)) ->
-                    NoDup (map Attribute_name (Class_attribute o)).
+  forall o : Class, 
+    (In o (Class_Instances model)) ->
+    NoDup (map Attribute_name (Class_attribute o)).
+
 
 Definition nsc_ClassUniqueness (model : SimpleUML) : Prop :=
   NoDup (map Class_name (Class_Instances model)).
 
+
 Definition nsc_DataTypeUniquenss (model : SimpleUML) : Prop :=
   NoDup (map DataType_name (DataType_Instances model)).
 
+
 Definition nsc_AssocUniqueness (model : SimpleUML) : Prop :=
   NoDup (map Assoc_name (Assoc_Instances model)).
+
 
 Definition NotSelfGenralization (model : SimpleUML) : Prop :=
   forall g: Gen, (In g (Gen_Instances model)) ->
