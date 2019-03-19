@@ -29,7 +29,7 @@ Inductive link :=
 Inductive atype :=
 | AT : class -> atype
 | AInt : nat -> atype
-| ACBool : bool -> atype
+| ABool : bool -> atype
 | AString : string -> atype.
 
 Inductive attrval : Set :=
@@ -186,83 +186,34 @@ Definition Sat_class (c: class) (s : State) : Prop :=
 
 
 (** get the objects of class c in l **)
-Fixpoint get_objects_of_class (c : class) (l : list object) :=
+Fixpoint get_objects_of_class (l : list object) (c : class) :=
   match l with
   | [] => []
   | o :: l' => if beq_class c (object_class o)
-               then o :: get_objects_of_class c l'
-               else get_objects_of_class c l'
+               then o :: get_objects_of_class l' c
+               else get_objects_of_class l' c
   end.
 
 
 (** get the links of association a **)
-Fixpoint get_links_of_assoc (a : association) (l : list link) :=
+Fixpoint get_links_of_assoc (l : list link) (a : association) :=
   match l with
   | [] => []
   | o :: l' => if beq_association a (link_assoc o)
-               then o :: get_links_of_assoc a l'
-               else get_links_of_assoc a l'
+               then o :: get_links_of_assoc l' a
+               else get_links_of_assoc l' a
   end.
 
 
+Definition sat_object_class model state : Prop :=
+  forall o : object, In o (mobjects state) ->
+  exists c : class, In c (classes model) /\ c = object_class o.
 
-(** only direct Generalization **)
-Definition Sat_gen (g: Gen) (s : State) :=
-  forall p : Object, 
-  let sub := Gen_dest g in 
-    In p (mapObject sub (vobjects s)) ->
-  let super := Gen_src g in 
-    In p (mapObject super (vobjects s)).
+Check parents.
 
+Definition domain c lg lo :=
+  map (get_objects_of_class lo) (flat_map (parents lg) c).
 
-
-(** get subset **)
-Fixpoint unionSet (sub: list Class) (l : list VObject) :=
-  match sub with
-  | nil => nil
-  | c :: sub' => set_union eqObject_dec (mapObject c l) (unionSet sub' l)
-  end.
-
-
-Definition csabstract (c : Class) :=
-  Class_abstract c = true.
-
-Definition Sat_abstract (c : Class) (sub : list Class) (s : State) :=
-  csabstract c -> 
-  mapObject c (vobjects s) = unionSet sub (vobjects s).
-
-Definition ncsabstract (c : Class) :=
-  Class_abstract c = false.
-
-Definition dom (st : State) (a : Assoc) :=
-  let lks := mapLink a (vlinks st) in
-  links_objects_src lks (vends st).
-
-Definition ran (st : State) (a : Assoc) :=
-  let lks := mapLink a (vlinks st) in
-  links_objects_dest lks (vends st).
-
-
-Definition Sat_assoc1 (a : Assoc) (s : State) :=
-  forall o, In o (dom s a) ->
-       In o (mapObject (Assoc_src a) (vobjects s)).
-
-Definition Sat_assoc2 (a : Assoc) (s : State) :=
-  forall o, In o (ran s a) ->
-       In o (mapObject (Assoc_dest a) (vobjects s)).
-
-
-Definition blt_eq (n : nat) (m : Natural) : bool :=
-  match m with
-  | Star => true
-  | Nat x => if leb n x then true else false
-  end.
-
-
-Compute (blt_eq 2 Star).
-Compute (blt_eq 2 (Nat 4)).
-Compute (blt_eq 2 (Nat 2)).
-Compute (blt_eq 2 (Nat 1)).
 
 (** the multiplicity defined in M denotes a range of possible links between objects of these
    classes. Moreover, structural propertoes expressed on the metamodel as OCL contraints 
