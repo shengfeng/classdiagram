@@ -109,8 +109,9 @@ Definition carRental : SimpleUML := mkSimpleUML
     [m1;m2;m3;m4;m5;m6;m7;m8]
     [g1;g2].
 
-Compute (parents' [g1;g2] c3).
+
 Compute (parents [g1;g2] c3).
+Compute (children [g1;g2] c1).
 
 
 Require Import objectdiagram.
@@ -189,12 +190,18 @@ Definition v21 :=
   BAttrval 73 a5 (AInt 2) ob7.
 
 
-Definition st : State := mkState
-  [ob1;ob2;ob3;ob4;ob5;ob6;ob7]
-  [l1;l2;l3;l4;l5;l6]
+Definition list_obj := [ob1;ob2;ob3;ob4;ob5;ob6;ob7].
+Definition list_link := [l1;l2;l3;l4;l5;l6].
+Definition list_value := 
   [v1;v2;v3;v4;v5;v6;v7;v8;
    v9;v10;v11;v12;v13;v14;v15;
    v16;v17;v18;v19;v20;v21].
+
+Definition st : State := 
+  mkState list_obj list_link list_value.
+
+
+Compute (domain c1 [g1;g2] list_obj).
 
 
 Lemma unique_class_company:
@@ -210,9 +217,9 @@ Ltac exists_class c :=
   exists c; firstorder; subst; reflexivity.
 
 Theorem class_satisfaction :
-  sat_object_class auto st.
+  sat_object_class carRental st.
 Proof.
-  unfold sat_object_class, auto, st; intros.
+  unfold sat_object_class, carRental, st; intros.
   simpl in *; firstorder.
   - exists_class c6.
   - exists_class c6.
@@ -222,3 +229,14 @@ Proof.
   - exists_class c2.
   - exists_class c3.
 Qed.
+
+
+
+Theorem domain_satisfaction :
+  sat_domain carRental st.
+Proof.
+  unfold sat_domain, carRental, st, list_obj; intros.
+  simpl in *; firstorder.
+  - rewrite H in *; crush.
+Admitted.
+

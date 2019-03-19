@@ -212,7 +212,16 @@ Definition sat_object_class model state : Prop :=
 Check parents.
 
 Definition domain c lg lo :=
-  map (get_objects_of_class lo) (flat_map (parents lg) c).
+  flat_map (get_objects_of_class lo) (children lg c).
+
+
+Definition sat_domain model state : Prop :=
+  forall (c1 c2 : class) (n : nat),  
+    In (BGen n c2 c1) (generalizations model) ->
+  forall o : object, 
+  let lg := generalizations model in
+  let lo := mobjects state in
+  In o (domain c1 lg lo) -> In o (domain c2 lg lo).
 
 
 (** the multiplicity defined in M denotes a range of possible links between objects of these

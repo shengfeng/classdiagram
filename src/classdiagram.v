@@ -348,8 +348,8 @@ Fixpoint deduplicate (ls : list class) :=
   | x :: [] => [x]
   | x :: xs
     => if leb (count_occ eqclass_dec ls x) 1
-       then deduplicate xs
-       else x :: deduplicate xs
+       then x :: deduplicate xs
+       else deduplicate xs
   end.
 
 
@@ -377,6 +377,32 @@ Definition parents (l : list generalization) (c : class) :=
   deduplicate (all_parents' l (parents' l c) (List.length l)).
 
 
+(** ----- children ----- **)
+Fixpoint children' (l : list generalization) (c : class) :=
+match l with
+| [] => []
+| (BGen _ c' p) :: l' => if beq_class c' c 
+                       then [p]
+                       else children' l' c
+end.
+
+
+Definition children_step (l : list generalization) (cs : list class) :=
+  deduplicate (cs ++ List.flat_map (children' l) cs).
+
+
+Fixpoint all_children' (l : list generalization) (cs : list class) (fuel : nat) :=
+  match fuel with
+  | 0 => cs
+  | S fuel'
+    => all_children' l (children_step l cs) fuel'
+  end.
+
+
+Definition children (l : list generalization) (c : class) :=
+  deduplicate (all_children' l (children' l c) (List.length l)).
+
+
 (* ----- get all attributes ----- *)
 Fixpoint get_attributes (c : class) (attrs : list attribute) :=
   match attrs with
@@ -385,15 +411,6 @@ Fixpoint get_attributes (c : class) (attrs : list attribute) :=
                    then a :: get_attributes c attr'
                    else get_attributes c attr'
   end.
-
-
-Fixpoint children' (l : list generalization) (c : class) :=
-match l with
-| [] => []
-| (BGen _ p c') :: l' => if beq_class c' c 
-                       then p :: parents' l' c
-                       else parents' l' c
-end.
 
 
 (** ###### Structural Constraints ##### **)
