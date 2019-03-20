@@ -382,7 +382,7 @@ Fixpoint children' (l : list generalization) (c : class) :=
 match l with
 | [] => []
 | (BGen _ c' p) :: l' => if beq_class c' c 
-                       then [p]
+                       then [p] ++ children' l' c
                        else children' l' c
 end.
 

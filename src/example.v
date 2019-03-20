@@ -97,7 +97,7 @@ Definition m8 :=
 Definition g1 := 
   BGen 38 c1 c2.
 Definition g2 := 
-  BGen 39 c2 c3.
+  BGen 39 c1 c3.
 
 
 Definition carRental : SimpleUML := mkSimpleUML 
@@ -201,9 +201,6 @@ Definition st : State :=
   mkState list_obj list_link list_value.
 
 
-Compute (domain c1 [g1;g2] list_obj).
-
-
 Lemma unique_class_company:
   unique_class carRental.
 Proof.
@@ -230,6 +227,17 @@ Proof.
   - exists_class c3.
 Qed.
 
+
+Compute (children [g1;g2] c1).
+Compute (children [g1;g2] c2).
+Compute (children [g1;g2] c3).
+
+Compute (domain [g1;g2] list_obj c1).
+Compute (domain [g1;g2] list_obj c2).
+Compute (domain [g1;g2] list_obj c3).
+
+
+Compute (flat_map (domain [g1;g2] list_obj) (children [g1;g2] c1)).
 
 
 Theorem domain_satisfaction :

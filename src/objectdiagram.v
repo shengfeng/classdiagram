@@ -209,10 +209,11 @@ Definition sat_object_class model state : Prop :=
   forall o : object, In o (mobjects state) ->
   exists c : class, In c (classes model) /\ c = object_class o.
 
-Check parents.
 
-Definition domain c lg lo :=
-  flat_map (get_objects_of_class lo) (children lg c).
+(** Check parents. **)
+
+Definition domain lg lo c :=
+  flat_map (get_objects_of_class lo) (children lg c ++ [c]).
 
 
 Definition sat_domain model state : Prop :=
@@ -221,8 +222,14 @@ Definition sat_domain model state : Prop :=
   forall o : object, 
   let lg := generalizations model in
   let lo := mobjects state in
-  In o (domain c1 lg lo) -> In o (domain c2 lg lo).
+  In o (domain lg lo c1) -> In o (domain lg lo c1).
 
+
+Definition sat_abstract_class_domain model state :=
+  forall c : class, In c (classes model) /\ is_abstract c = true -> 
+  let lg := generalizations model in
+  let lo := mobjects state in
+  domain lg lo c = flat_map (domain lg lo) (children lg c).
 
 (** the multiplicity defined in M denotes a range of possible links between objects of these
    classes. Moreover, structural propertoes expressed on the metamodel as OCL contraints 
