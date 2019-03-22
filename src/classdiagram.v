@@ -336,6 +336,18 @@ Definition beq_association c c' :=
   end.
 
 
+Definition eqmultiplicity_dec : 
+  forall x y: multiplicity, {x = y} + {x <> y}.
+  repeat decide equality.
+Defined.
+
+
+Definition beq_multiplicity c c' :=
+  match eqmultiplicity_dec c c' with
+  | left _ => true
+  | right _ => false
+  end.
+
 
 (* ---------- Functions --------- *)
 
