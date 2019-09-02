@@ -23,7 +23,7 @@ Open Scope list_scope.
 
 (* ----- class(classid, classname, isAbstract) ----- *)
 Inductive class : Set :=
-| BClass : nat -> string -> bool -> class.
+| BClass : string -> bool -> class.
 
 
 (* ----- attribute(attrid, attrname, attrtype, classid)  ----- *)
@@ -34,35 +34,39 @@ Inductive ctype :=
 | cstring : ctype.
 
 
+Inductive visibility :=
+| public | private | protected.
+
+
 Inductive attribute : Set :=
-| BAttribute : nat -> string -> ctype -> class -> attribute.
+| BAttribute : string -> visibility -> ctype -> class -> attribute.
 
 
 (* ----- parameter(pod, pname, ptype) ------ *)
 Inductive parameter :=
-| BParameter : nat -> string -> ctype -> parameter.
+| BParameter : string -> ctype -> parameter.
 
 
 (* ----- operation(opid, opname, [parameter], classid) ----- *)
 Inductive operation : Set :=
-| BOperation : nat -> string -> list parameter -> class -> operation.
+| BOperation : string -> visibility -> list parameter -> class -> operation.
 
 
 (* ----- association(associd, classAid, classBid, assoctype) ----- *)
 Inductive assoctype : Set :=
-| none : assoctype
-| directed : assoctype
+| bidirect : assoctype
+| direct : assoctype
 | aggregate : assoctype
 | composite : assoctype.
 
 
 Inductive association : Set :=
-| BAssoc: nat -> class -> class -> assoctype -> association.
+| BAssoc: nat -> string -> list class -> assoctype -> association.
 
 
 (* ----- rolename(roleid, nameA, nameB, associd) ----- *)
 Inductive rolename : Set :=
-| BRole: nat -> string -> string -> association -> rolename.
+| BRole: nat -> list string -> association -> rolename.
 
 
 (* ----- multiplicity(multid, classid, lower, upper, associd) ----- *)
@@ -77,7 +81,7 @@ Inductive multiplicity : Set :=
 
 (* ----- generalization(genid, superid, subid) ----- *)
 Inductive generalization : Set :=
-| BGen : nat -> class -> class -> generalization.
+| BGen : class -> class -> generalization.
 
 
 (** ------------------------------- **)
@@ -97,35 +101,28 @@ Record SimpleUML : Set :=
 (* ------------------projection--------------------- *)
 
 (* ----- projection of class  ----- *)
-Definition class_id (c : class) : nat :=
-  match c with
-  | (BClass n _ _) => n
-  end.
-
-
 Definition class_name (c : class) : string :=
   match c with
-  | (BClass _ s _) => s
+  | (BClass s _) => s
   end.
 
 
 Definition is_abstract (c : class) : bool :=
   match c with
-  | (BClass _ _ a) => a
+  | (BClass _ a) => a
   end.
 
 
 (* ----- projection of attribute ----- *)
-
-Definition attr_id (a : attribute) : nat :=
+Definition attr_name (a : attribute) : string :=
   match a with
   | (BAttribute n _ _ _) => n
   end.
 
 
-Definition attr_name (a : attribute) : string :=
+Definition attr_visibility (a : attribute) : visibility :=
   match a with
-  | (BAttribute _ n _ _) => n
+  | BAttribute _ v _ _ => v
   end.
 
 
@@ -142,15 +139,15 @@ Definition attr_class (a : attribute) : class :=
 
 
 (* ----- projection of operation ----- *)
-Definition op_id (o : operation) : nat :=
+Definition op_name (o : operation) : string :=
   match o with
-  | BOperation m _ _ _ => m
+  | BOperation n _ _ _ => n
   end.
 
 
-Definition op_name (o : operation) : string :=
+Definition op_visibility (o : operation) : visibility :=
   match o with
-  | BOperation _ n _ _ => n
+  | BOperation _ v _ _ => v
   end.
 
 
@@ -167,39 +164,33 @@ Definition op_class (o : operation) : class :=
 
 
 (* ----- projection of parameter ----- *)
-Definition param_id (p : parameter) :=
-  match p with
-  | BParameter n _ _ => n
-  end.
-
-
 Definition param_name (p : parameter) :=
   match p with
-  | BParameter _ n _ => n
+  | BParameter n _ => n
   end.
 
 
 Definition param_type (p : parameter) :=
   match p with
-  | BParameter _ _ t => t
+  | BParameter _ t => t
   end.
 
 (* ----- projection of association ----- *)
 Definition assoc_id (a : association) : nat :=
   match a with
-  | BAssoc n _ _ _ => n
+  | BAssoc n _ _ _  => n
   end.
 
 
-Definition assoc_source_class (a : association) : class :=
+Definition asscoc_name (a : association) : string :=
   match a with
-  | BAssoc _ s _ _ => s
+  | BAssoc _ n _ _ => n
   end.
 
 
-Definition assoc_target_class (a : association) : class :=
+Definition assoc_classes (a : association) : list class :=
   match a with
-  | BAssoc _ _ t _ => t
+  | BAssoc _ _ s _  => s
   end.
 
 
@@ -213,25 +204,19 @@ Definition assoc_type (a : association) : assoctype :=
 
 Definition rolename_id (r : rolename) : nat :=
   match r with
-  | BRole n _ _ _ => n
+  | BRole n _ _ => n
   end.
 
 
-Definition rolename_source_name (r : rolename) : string :=
+Definition rolename_names (r : rolename) : list string :=
   match r with
-  | BRole _ s _ _ => s
-  end.
-
-
-Definition rolename_target_name (r : rolename) : string :=
-  match r with
-  | BRole _ _ t _ => t
+  | BRole _ s _ => s
   end.
 
 
 Definition rolename_association (r : rolename) : association :=
   match r with
-  | BRole _ _ _ a => a
+  | BRole _ _ a => a
   end.
 
 
@@ -268,21 +253,15 @@ Definition multi_assoc (r : multiplicity) : association :=
 
 
 (* ----- projection of generalization ----- *)
-Definition gener_id (r : generalization) : nat :=
-  match r with
-  |  BGen n _ _ => n
-  end.
-
-
 Definition gener_sub (r : generalization) : class :=
   match r with
-  |  BGen _ sub _ => sub
+  |  BGen sub _ => sub
   end.
 
 
 Definition gener_super (r : generalization) : class :=
   match r with
-  |  BGen _ _ super => super
+  |  BGen _ super => super
   end.
 
 
@@ -368,7 +347,7 @@ Fixpoint deduplicate (ls : list class) :=
 Fixpoint parents' (l : list generalization) (c : class) :=
 match l with
 | [] => []
-| (BGen _ p c') :: l' => if beq_class c c' 
+| (BGen p c') :: l' => if beq_class c c' 
                        then [p]
                        else parents' l' c
 end.
@@ -393,7 +372,7 @@ Definition parents (l : list generalization) (c : class) :=
 Fixpoint children' (l : list generalization) (c : class) :=
 match l with
 | [] => []
-| (BGen _ c' p) :: l' => if beq_class c' c 
+| (BGen c' p) :: l' => if beq_class c' c 
                        then [p] ++ children' l' c
                        else children' l' c
 end.
@@ -427,15 +406,6 @@ Fixpoint get_attributes (c : class) (attrs : list attribute) :=
 
 (** ###### Structural Constraints ##### **)
 
-Definition lst_class_id (model : SimpleUML) : list nat :=
-  map class_id (classes model).
-
-Definition lst_attr_id (model : SimpleUML) : list nat :=
-  map attr_id (attributes model).
-
-Definition lst_oper_id (model : SimpleUML) : list nat :=
-  map op_id (operations model).
-
 Definition lst_assoc_id (model : SimpleUML) : list nat :=
   map assoc_id (associations model).
 
@@ -445,14 +415,10 @@ Definition lst_rolename_id (model : SimpleUML) : list nat :=
 Definition lst_multi_id (model : SimpleUML) : list nat :=
   map multi_id (multiplicities model).
 
-Definition lst_gener_id (model : SimpleUML) : list nat :=
-  map gener_id (generalizations model).
-
 Definition Unique_id (model : SimpleUML) : Prop :=
-  NoDup (lst_class_id model ++ lst_attr_id model ++ 
-         lst_oper_id model ++ lst_assoc_id model ++
-         lst_rolename_id model ++ lst_multi_id model ++
-         lst_gener_id model).
+  NoDup  (lst_assoc_id model ++
+          lst_rolename_id model ++
+          lst_multi_id model).
 
 
 
