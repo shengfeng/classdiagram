@@ -478,12 +478,11 @@ Definition nsc_assoc (model : SimpleUML) :=
     (assoc_type a = composite \/ assoc_type a = aggregate) ->
     forall m : multiplicity,
       In m (get_multiplicities a (multiplicities model)) ->
-      multi_lower_eq_n m 1 = true /\ multi_upper_eq_n m 1 = true.                  
-    
+      multi_lower_eq_n m 1 = true /\ multi_upper_eq_n m 1 = true.
 
 
 (** ----- well formed ----- **)
 
 Definition WellFormed (s : SimpleUML) :  Prop :=
   unique_class s /\ unique_attribute s /\  unique_attr_names s /\
-  nsc_AttributeUniqueness s /\ nsc_ClassUniqueness s /\ NotSelfGenralization s.
+  nsc_AttributeUniqueness s /\ nsc_ClassUniqueness s /\ nsc_nselfgen s.

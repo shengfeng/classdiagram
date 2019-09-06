@@ -17,12 +17,16 @@ Import ListNotations.
 
 (* ----- object(objid, objname, classid) ------ *)
 Inductive object := 
-| BObject: nat -> string -> class -> object.
+| BObject: string -> class -> object.
 
 
 (* ----- link(linkid, objAid, objBid, associd) ------ *)
+Inductive link_rel :=
+| rel_assoc : association -> link_rel
+| rel_gen : generalization -> link_rel.
+
 Inductive link :=
-| BLink: nat -> object -> object -> association -> link.
+| BLink: list object -> link_rel -> link.
 
 
 (* ------ attrval(attrvalid, attrid, value, objid) ---- *)
@@ -33,7 +37,7 @@ Inductive atype :=
 | AString : string -> atype.
 
 Inductive attrval : Set :=
-| BAttrval : nat -> attribute -> atype -> object -> attrval.
+| BAttrval : attribute -> atype -> object -> attrval.
 
 
 (* ---- Equality Judgement -----*)
@@ -74,6 +78,18 @@ Definition beq_attrval l l' :=
   end.
 
 
+Definition eqRel_dec : forall x y: link_rel, {x = y} + {x <> y}.
+  repeat decide equality.
+Defined.
+
+
+Definition beq_link_rel l l' :=
+  match eqRel_dec l l' with
+  | left _ => true
+  | right _ => false
+  end.
+
+
 Open Scope type_scope.
 
 (** ----- pair (class, objects) ----- *)
@@ -89,71 +105,47 @@ Record State : Set :=
 (* ----- projections ------ *)
 
 (* ----- projects of objects -----*)
-Definition object_id (o : object) :=
-  match o with
-  | BObject n _ _  => n
-  end.
-
-
 Definition object_name (o : object) : string :=
   match o with
-  | BObject _ n _  => n
+  | BObject n _  => n
   end.
 
 
 Definition object_class (o : object) :=
   match o with
-  | BObject _ _ c => c
+  | BObject _ c => c
   end.
 
 
 (* ----- projects of links -----*)
-Definition link_id (l : link) :=
+Definition link_objects (l : link) :=
   match l with
-  | BLink n _ _ _  => n
-  end.
-
-
-Definition link_source_object (l : link) :=
-  match l with
-  | BLink _ s _ _  => s
-  end.
-
-
-Definition link_target_object (l : link) :=
-  match l with
-  | BLink _ _ t _  => t
+  | BLink s _  => s
   end.
 
 
 Definition link_assoc (l : link) :=
   match l with
-  | BLink _ _ _ a  => a
+  | BLink _ a  => a
   end.
 
 
 (* ----- projections of attrval ----- *)
-Definition attrv_id (a : attrval) :=
-  match a with
-  | BAttrval n _ _ _ => n
-  end.
-
-
 Definition attrv_attribute (a : attrval) :=
   match a with
-  | BAttrval _ attr _ _ => attr
+  | BAttrval attr _ _ => attr
   end.
 
 
 Definition attrv_type (a : attrval) :=
   match a with
-  | BAttrval _ _ t _ => t
+  | BAttrval _ t _ => t
   end.
 
 
 Definition attrv_object (a : attrval) :=
   match a with
-  | BAttrval _ _ _ ob => ob
+  | BAttrval _ _ ob => ob
   end.
 
 
@@ -195,14 +187,14 @@ Fixpoint get_objects_of_class (l : list object) (c : class) :=
   end.
 
 
-(** get the links of association a **)
+(* (** get the links of association a **)
 Fixpoint get_links_of_assoc (l : list link) (a : association) :=
   match l with
   | [] => []
   | o :: l' => if beq_association a (link_assoc o)
                then o :: get_links_of_assoc l' a
                else get_links_of_assoc l' a
-  end.
+  end. *)
 
 
 Definition sat_object_class model state : Prop :=
@@ -217,8 +209,8 @@ Definition domain lg lo c :=
 
 
 Definition sat_domain model state : Prop :=
-  forall (c1 c2 : class) (n : nat),  
-    In (BGen n c2 c1) (generalizations model) ->
+  forall (c1 c2 : class),
+    In (BGen c2 c1) (generalizations model) ->
   forall o : object, 
   let lg := generalizations model in
   let lo := mobjects state in
