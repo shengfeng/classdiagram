@@ -4,6 +4,7 @@ Require Import Coq.Sorting.Mergesort.
 Require Export classdiagram.
 Require Export objectdiagram.
 Require Import String.
+Require Import CpdtTactics.
 Open Scope string_scope.
 
 (** Example of Order Payment  **)
@@ -52,13 +53,13 @@ Definition o12 := BOperation "authorized" public [] c8.
 
 (** Associations **)
 Definition s1 : association :=
-  BAssoc 1 "" [c1;c2] bidirect.
+  BAssoc 1 "has" [c1;c2] bidirect.
 Definition s2 : association :=
   BAssoc 2 "compose" [c2; c3] composite.
 Definition s3 : association :=
-  BAssoc 3 "" [c3;c4] direct.
+  BAssoc 3 "items" [c3;c4] direct.
 Definition s4 : association :=
-  BAssoc 4 "" [c2;c5] bidirect.
+  BAssoc 4 "pay" [c2;c5] bidirect.
 
 
 
@@ -107,6 +108,36 @@ Definition order_payment := mkSimpleUML
     [g1;g2;g3].
 
 
+(** well founded rules **)
+Example wlf_rule1:
+  nsc_class_unique order_payment.
+Proof.
+  unfold order_payment, nsc_class_unique; simpl.
+  repeat constructor; crush.
+Qed.
+
+
+Example wlf_rule2:
+  nsc_attribute_unique order_payment.
+Proof.
+  unfold order_payment, nsc_attribute_unique; crush; 
+  repeat constructor; crush.
+Qed.
+
+Example wlf_rule3:
+  nsc_nselfgen order_payment.
+Proof.
+  unfold order_payment, nsc_nselfgen; crush; inversion H.
+Qed.
+
+
+Example wlf_rule4:
+  nsc_assoc order_payment.
+Proof.
+  unfold order_payment, nsc_assoc; crush.
+  unfold multi_upper_eq_n, m4; crush.
+Admitted.
+
 
 (* object diagrams *)
 Definition b1 := BObject "c" c1.
@@ -152,3 +183,32 @@ Definition order_instance := mkState
   [b1;b2;b3;b4;b5;b6;b7;b8]
   [l1;l2;l3;l4;l5;l6;l7]
   [v1;v2;v3;v4;v5;v6;v7;v8;v9;v10;v11;v12;v13;v14;v15;v16;v17;v18].
+
+
+Example sat_rule1:
+  sat_object_class order_payment order_instance.
+Proof.
+  unfold order_payment, order_instance, sat_object_class; crush.
+  + exists c1; crush.
+  + exists c2; crush.
+  + exists c2; crush.
+  + exists c3; crush.
+  + exists c3; crush.
+  + exists c3; crush.
+  + exists c6; crush.
+  + exists c8; crush.
+Qed.
+
+
+Example sat_rule2:
+  sat_domain order_payment order_instance.
+Proof.
+  unfold order_payment, order_instance, sat_domain; crush.
+Qed.
+
+
+Example sat_rule3:
+  sat_abstract_class_domain order_payment order_instance.
+Proof.
+  unfold order_payment, order_instance, sat_abstract_class_domain; crush.
+Qed.
