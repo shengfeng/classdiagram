@@ -8,18 +8,15 @@ Open Scope list_scope.
 Import ListNotations.
 
 
-Definition refine_class := 
-  list (class * class).
+Definition refine_class :=  list (class * class).
 
-Definition refine_association :=
-  list (association * association).
+Definition refine_assoc := list (assoc * assoc).
 
 Definition refine_multiplicity :=
   list (multiplicity * multiplicity).
 
-
 Definition refine_t :=
-  refine_class * refine_association * refine_multiplicity.
+  refine_class * refine_assoc * refine_multiplicity.
 
 
 
@@ -43,20 +40,20 @@ Fixpoint get_refinement_cclass (ref : refine_class) (a : class) :=
 
 
 
-Fixpoint get_refinement_aassoc (ref : refine_association) (c : association) :=
+Fixpoint get_refinement_aassoc (ref : refine_assoc) (c : assoc) :=
   match ref with
   | [] => None
-  | h :: ref' => if beq_association (fst h) c
+  | h :: ref' => if beq_assoc (fst h) c
                  then Some (snd h)
                  else get_refinement_aassoc ref' c
   end.
 
 
 
-Fixpoint get_refinement_cassoc (ref : refine_association) (a : association) :=
+Fixpoint get_refinement_cassoc (ref : refine_assoc) (a : assoc) :=
   match ref with
   | [] => None
-  | h :: ref' => if beq_association (snd h) a
+  | h :: ref' => if beq_assoc (snd h) a
                  then Some (fst h)
                  else get_refinement_aassoc ref' a
   end.
@@ -79,13 +76,6 @@ Fixpoint get_refinement_cmulti (ref : refine_multiplicity) (c : multiplicity) :=
                  else get_refinement_amulti ref' c
   end.
 
-
-Print le.
-(*
-Inductive natural :=
-| Nat : nat -> natural
-| Star : natural.
-*)
 
 
 Definition natural_nat (n : natural) :=
@@ -118,19 +108,19 @@ Definition b1 (C A : SimpleUML) (ref : refine_class) :=
 
 
 
-Definition b2 (C A : SimpleUML) (ref : refine_association) :=
-  forall c, In c (associations C) ->
-    exists! a, In a (associations A) /\ 
+Definition b2 (C A : SimpleUML) (ref : refine_assoc) :=
+  forall c, In c (assocs C) ->
+    exists! a, In a (assocs A) /\ 
     Some a = get_refinement_aassoc ref c.
 
 
 
 Definition b4 (C A : SimpleUML) (ref : refine_class) :=
-  forall a1 a2 n, In (BGen n a1 a2) (generalizations A) ->
-    exists n' c1 c2,
+  forall a1 a2, In (BGen a1 a2) (generalizations A) ->
+    exists c1 c2,
       Some c1 = get_refinement_cclass ref a1 /\
       Some c2 = get_refinement_cclass ref a2 /\
-      In (BGen n' c1 c2) (generalizations C).
+      In (BGen c1 c2) (generalizations C).
 
 
 Definition b5 (C A : SimpleUML) (ref : refine_multiplicity) :=

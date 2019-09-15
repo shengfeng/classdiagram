@@ -347,6 +347,9 @@ Fixpoint get_multiplicities (a : assoc) (ml : list multiplicity) :=
   end.
 
 
+Check get_multiplicities.
+
+
 
 (** ###### Structural Constraints ##### **)
 Definition unique_class (model : SimpleUML) : Prop :=
@@ -378,22 +381,25 @@ Definition natural_eq_n (m : natural) (n : nat) :=
   | Star => false
   end.
 
-(*
+
 Definition multi_lower_eq_n (m : multiplicity) (n : nat) :=
-  natural_eq_n (multi_lower m) n.
+  match hd_error (multi_naturals m) with
+  | Some (lower, upper) => Some (natural_eq_n lower n)
+  | None => None
+  end.
+
 
 Definition multi_upper_eq_n (m : multiplicity) (n : nat) :=
-  natural_eq_n (multi_upper m) n.
-*)
-(*
+  match hd_error (multi_naturals m) with
+  | Some (lower, upper) => Some (natural_eq_n upper n)
+  | None => None
+  end.
+
+
 Definition nsc_assoc (model : SimpleUML) :=
-  forall a : assoc,
-    In a (associations model) /\
+  forall a : associates,
+    In a (associatess model) /\
     (assoc_type a = composite \/ assoc_type a = aggregate) ->
     forall m : multiplicity,
-      In m (get_multiplicities a (multiplicities model)) ->
-      multi_lower_eq_n m 1 = true /\ multi_upper_eq_n m 1 = true.                  
-*)   
-
-
-(** ----- well formed ----- **)
+      In m (get_multiplicities (assoc_name a) (multiplicities model)) ->
+      multi_lower_eq_n m 1 = Some true /\ multi_upper_eq_n m 1 = Some true.

@@ -193,3 +193,12 @@ Example wlf_rule3:
 Proof.
   unfold car_rental, nsc_nselfgen; crush; inversion H.
 Qed.
+
+
+Example wlf_rule4:
+  nsc_assoc car_rental.
+Proof.
+  unfold car_rental, nsc_assoc.
+Admitted.
+
+
