@@ -24,71 +24,23 @@ Open Scope string_scope.
 Definition class := string.
 
 
-(** example **)
-Definition Branch : class := "Branch".
-Definition Car : class := "Car".
-Definition CarGroup : class := "CarGroup".
-Definition Check_ : class := "Check".
-Definition Customer : class := "Customer".
-Definition Employee : class := "Employee".
-Definition Person : class := "Person".
-Definition Rental : class := "Rental".
-Definition SeriveDepot : class := "Serivedepot".
-
-Definition car_class :=
-  [Branch;Car;CarGroup;Check_;Customer;Employee;Person;Rental;SeriveDepot].
-
-
 (* attribute  *)
 Inductive ptype :=
 | TClass : class -> ptype
-| Integer : ptype
-| Boolean : ptype
-| String : ptype.
-
+| TInteger : ptype
+| TBoolean : ptype
+| TString : ptype.
 
 Inductive type :=
 | t1 : ptype -> type
 | t2 : list ptype -> type.
 
-
 Inductive attribute : Set :=
 | BAttribute : string ->  class -> type -> attribute.
-
-
-(** Example **)
-Definition firstname :=
-  BAttribute "firstname" Person (t1 String).
-Definition lastname :=
-  BAttribute "lastname" Person (t1 String).
-Definition age :=
-  BAttribute "age" Person (t1 Integer).
-Definition isMarried :=
-  BAttribute "isMarried" Person (t1 Boolean).
-Definition email :=
-  BAttribute "email" Person (t2 [String]).
-
-
-Definition car_attibute :=
-  [firstname;lastname;age;isMarried;email].
-
 
 (** ----- operation(opid, opname, [parameter], classid) ----- **)
 Inductive operation : Set :=
 | BOperation : string  -> class -> list type -> operation.
-
-
-(** Example **)
-Definition description :=
-  BOperation "description" Car [(t1 String)].
-Definition rentalForDay :=
-  BOperation "rentalForDay" Branch [(t1 String);(t2 [TClass Rental])].
-Definition raiseSalary :=
-  BOperation "raiseSalary" Employee [(t1 Integer);(t1 Integer)].
-
-Definition car_operation :=
-  [description;rentalForDay;raiseSalary].
-
 
 (* ----- association(associd, classAid, classBid, assoctype) ----- *)
 Definition assoc := string.
@@ -102,109 +54,22 @@ Inductive assoctype : Set :=
 Inductive associates : Set :=
 | BAssoc: assoc -> list class -> assoctype -> associates.
 
-
-(** example **)
-Definition Assignment : assoc := "Assignment".
-Definition Booking : assoc := "Booking".
-Definition Classification : assoc := "Classification".
-Definition Employment : assoc := "Employment".
-Definition Fleet : assoc := "Fleet".
-Definition Maintenance : assoc := "Maintenance".
-Definition Management : assoc := "Management".
-Definition Offer : assoc := "Offer".
-Definition Provider : assoc := "Provider".
-Definition Quality : assoc := "Quality".
-Definition Reservation : assoc := "Reservation".
-
-
-Definition car_assoc :=
-  [Assignment;Booking;Classification;Employment;Fleet;
-     Maintenance;Management;Offer;Provider;Quality;Reservation].
-
-Definition a1 :=
-  BAssoc Assignment [Rental;Car] bidirect.
-Definition a2 :=
-  BAssoc Booking [Rental;Customer] bidirect.
-Definition a3 :=
-  BAssoc Classification [CarGroup;Car] bidirect.
-Definition a4 :=
-  BAssoc Employment [Branch;Employee] bidirect.
-Definition a5 :=
-  BAssoc Fleet  [Branch;Car] bidirect.
-Definition a6 :=
-  BAssoc Maintenance [SeriveDepot;Check_;Car] bidirect.
-Definition a7 :=
-  BAssoc Management [Branch;Employee] bidirect.
-Definition a8 :=
-  BAssoc Offer [Branch;CarGroup] bidirect.
-Definition a9 :=
-  BAssoc Provider [Rental;Branch] bidirect.
-Definition a10 :=
-  BAssoc Quality [CarGroup;CarGroup] bidirect.
-Definition a11 :=
-  BAssoc Reservation [Rental;CarGroup] bidirect.
-
-Definition car_associates :=
-  [a1;a2;a3;a4;a5;a6;a7;a8;a9;a10;a11].
-
-
 (* ----- rolename(roleid, nameA, nameB, associd) ----- *)
 Inductive role : Set :=
 | BRole: assoc -> list string -> role.
-
-
-(** example **)
-Definition r1 :=
-  BRole Assignment ["rental";"car"].
-Definition r2 :=
-  BRole Booking ["rental";"customer"].
-Definition r3 :=
-  BRole Classification ["carGroup";"car"].
-Definition r4 :=
-  BRole Employment ["employer";"employee"].
-Definition r5 :=
-  BRole Fleet ["branch";"car"].
-Definition r6 :=
-  BRole Maintenance ["seriveDepot";"check";"car"].
-Definition r7 :=
-  BRole Management ["managedBranch";"manager"].
-Definition r8 :=
-  BRole Offer ["branch";"carGroup"].
-Definition r9 :=
-  BRole Provider ["rental";"branch"].
-Definition r10 :=
-  BRole Quality ["lower";"high"].
-Definition r11 :=
-  BRole Reservation ["rental";"carGroup"].
-
-
-Definition car_roles :=
-  [r1;r2;r3;r4;r5;r6;r7;r8;r9;r10;r11].
-
-
 
 (* ----- multiplicity(multid, classid, lower, upper, associd) ----- *)
 Inductive natural :=
 | Nat : nat -> natural
 | Star : natural.
 
-
 Inductive multiplicity : Set :=
-| BMulti : assoc -> class -> natural -> natural -> multiplicity.
+| BMulti : assoc -> list (natural * natural) -> multiplicity.
 
 
 (* ----- generalization(genid, superid, subid) ----- *)
 Inductive generalization : Set :=
 | BGen : class -> class -> generalization.
-
-
-(** example **)
-Definition g1 := BGen Customer Person.
-Definition g2 := BGen Employee Person.
-
-
-Definition car_generalization :=
-  [g1; g2].
 
 
 (** ------------------------------- **)
@@ -220,7 +85,6 @@ Record SimpleUML : Set :=
       mmultiplicity : list multiplicity;
       mgeneralization : list generalization
     }.
-
 
 (* ------------------projection--------------------- *)
 
@@ -265,7 +129,7 @@ Definition op_parameters (o : operation) : list type :=
 (* ----- projection of association ----- *)
 Print associates.
 
-Definition asscoc_name (a : associates) : assoc :=
+Definition assoc_name (a : associates) : assoc :=
   match a with
   | BAssoc n _ _ => n
   end.
@@ -297,24 +161,13 @@ Definition role_names (r : role) : list string :=
 (* ----- projection of multiplicity ----- *)
 Definition multi_assoc (r : multiplicity) : assoc :=
   match r with
-  |  BMulti a _ _ _ => a
-  end.
-
-Definition multi_class (r : multiplicity) : class :=
-  match r with
-  | BMulti _ c _ _  => c
+  | BMulti a _ => a
   end.
 
 
-Definition multi_lower (r : multiplicity) : natural :=
+Definition multi_naturals (r : multiplicity) :=
   match r with
-  |  BMulti _ _ l _ => l
-  end.
-
-
-Definition multi_upper (r : multiplicity) : natural :=
-  match r with
-  |  BMulti _ _ _ u => u
+  |  BMulti _ l => l
   end.
 
 
@@ -401,12 +254,8 @@ Fixpoint participating (c : class) (l: list associates) :=
   | [] => []
   | h :: l' =>
     if 0 <? List.count_occ eqclass_dec  (assoc_classes h) c 
-    then h :: participating c l' else participating c l'          
+    then (assoc_name h) :: participating c l' else participating c l'
   end.
-
-
-Compute (participating Car car_associates).
-
 
 
 Fixpoint navends_aux (a : assoc) (l : list role) :=
@@ -416,10 +265,6 @@ Fixpoint navends_aux (a : assoc) (l : list role) :=
     if beq_assoc (role_assoc h) a
     then role_names h else navends_aux a l'
   end.
-
-
-Compute (navends_aux Maintenance car_roles).
-
 
 (** --- get all parents --- **)
 
@@ -458,11 +303,6 @@ Fixpoint all_parents' (l : list generalization) (cs : list class) (fuel : nat) :
 Definition parents (l : list generalization) (c : class) :=
   deduplicate (all_parents' l (parents' l c) (List.length l)).
 
-
-Compute (parents car_generalization Customer).
-Compute (parents car_generalization Employee).
-
-
 (** ----- children ----- **)
 Fixpoint children (l : list generalization) (c : class) :=
 match l with
@@ -485,9 +325,6 @@ Fixpoint all_children (l : list generalization) (cs : list class) (fuel : nat) :
 
 Definition get_children (l : list generalization) (c : class) :=
   deduplicate (all_children l (children l c) (List.length l)).
-
-
-Compute (get_children car_generalization Person).
 
 
 (* ----- get all attributes ----- *)
@@ -524,7 +361,7 @@ Definition unique_attr_names (model : SimpleUML) : Prop :=
 
 (** ##### Non-structural Contraints ##### **)
 
-Definition nsc_AttributeUniqueness (model : SimpleUML) : Prop :=
+Definition nsc_attribute_unique (model : SimpleUML) : Prop :=
   forall o : class, 
     In o (classes model) -> 
     NoDup (map attr_name (get_attributes o (attributes model))).
@@ -541,13 +378,13 @@ Definition natural_eq_n (m : natural) (n : nat) :=
   | Star => false
   end.
 
-
+(*
 Definition multi_lower_eq_n (m : multiplicity) (n : nat) :=
   natural_eq_n (multi_lower m) n.
 
 Definition multi_upper_eq_n (m : multiplicity) (n : nat) :=
   natural_eq_n (multi_upper m) n.
-
+*)
 (*
 Definition nsc_assoc (model : SimpleUML) :=
   forall a : assoc,
