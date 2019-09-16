@@ -17,27 +17,21 @@ Import ListNotations.
 
 (* ----- object(objid, objname, classid) ------ *)
 Inductive object := 
-| BObject: string -> class -> object.
-
-
-(* ----- link(linkid, objAid, objBid, associd) ------ *)
-Inductive link_rel :=
-| rel_assoc : association -> link_rel
-| rel_gen : generalization -> link_rel.
-
-Inductive link :=
-| BLink: list object -> link_rel -> link.
-
+| BObject: class -> string -> object.
 
 (* ------ attrval(attrvalid, attrid, value, objid) ---- *)
 Inductive atype :=
-| AT : class -> atype
-| AInt : nat -> atype
-| ABool : bool -> atype
+| AClass : class -> atype
+| AInteger : nat -> atype
+| ABoolean : bool -> atype
 | AString : string -> atype.
 
 Inductive attrval : Set :=
-| BAttrval : attribute -> atype -> object -> attrval.
+| BAttrval : attribute -> object -> atype -> attrval.
+
+(* ----- link(linkid, objAid, objBid, associd) ------ *)
+Inductive link :=
+| BLink: assoc -> list object -> link.
 
 
 (* ---- Equality Judgement -----*)
@@ -77,77 +71,59 @@ Definition beq_attrval l l' :=
   | right _ => false
   end.
 
-
-Definition eqRel_dec : forall x y: link_rel, {x = y} + {x <> y}.
-  repeat decide equality.
-Defined.
-
-
-Definition beq_link_rel l l' :=
-  match eqRel_dec l l' with
-  | left _ => true
-  | right _ => false
-  end.
-
-
-Open Scope type_scope.
-
 (** ----- pair (class, objects) ----- *)
 
 Record State : Set :=
   mkState {
       mobjects : list object;
-      mlinks : list link;
-      mattrvals : list attrval
+      mattrvals : list attrval;
+      mlinks : list link
   }.
 
 
 (* ----- projections ------ *)
 
 (* ----- projects of objects -----*)
-Definition object_name (o : object) : string :=
+Definition object_class (o : object) : string :=
   match o with
   | BObject n _  => n
   end.
 
 
-Definition object_class (o : object) :=
+Definition object_name (o : object) :=
   match o with
   | BObject _ c => c
   end.
 
 
 (* ----- projects of links -----*)
-Definition link_objects (l : link) :=
+Definition link_assoc (l : link) : assoc :=
   match l with
-  | BLink s _  => s
+  | BLink a _  => a
   end.
 
 
-Definition link_assoc (l : link) :=
+Definition link_objects (l : link) : list object :=
   match l with
-  | BLink _ a  => a
+  | BLink _ s  => s
   end.
-
 
 (* ----- projections of attrval ----- *)
-Definition attrv_attribute (a : attrval) :=
+Definition attrv_attribute (a : attrval) : attribute :=
   match a with
   | BAttrval attr _ _ => attr
   end.
 
-
-Definition attrv_type (a : attrval) :=
+Definition attrv_object (a : attrval) : object :=
   match a with
-  | BAttrval _ t _ => t
+  | BAttrval _ ob _ => ob
   end.
 
 
-Definition attrv_object (a : attrval) :=
+Definition attrv_type (a : attrval) : atype :=
   match a with
-  | BAttrval _ _ ob => ob
+  | BAttrval _ _ t => t
   end.
-
 
 (* ---- projections of states ----- *)
 Definition objects (state : State) :=
@@ -160,16 +136,6 @@ Definition links (state : State) :=
 
 Definition attrvals (state : State) :=
   mattrvals state.
-
-
-(* ----- Component ----- *)
-Inductive component : Type :=
-| cclass : class -> component
-| cattribute : attribute -> component
-| cassociation : association -> component
-| cgeneralization : generalization -> component
-| cabstract : list class -> component
-| cnonabstract : list class -> component.
 
 
 (** every object o in s is the instance of a class c **)
@@ -218,10 +184,10 @@ Definition sat_domain model state : Prop :=
 
 
 Definition sat_abstract_class_domain model state :=
-  forall c : class, In c (classes model) /\ is_abstract c = true -> 
-  let lg := generalizations model in
-  let lo := mobjects state in
-  domain lg lo c = flat_map (domain lg lo) (children lg c).
+  forall c : class, In c (classes model) -> 
+    let lg := generalizations model in
+    let lo := mobjects state in
+    domain lg lo c = flat_map (domain lg lo) (children lg c).
 
 (** the multiplicity defined in M denotes a range of possible links between objects of these
    classes. Moreover, structural propertoes expressed on the metamodel as OCL contraints 

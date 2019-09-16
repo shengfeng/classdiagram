@@ -32,9 +32,13 @@ Definition isMarried :=
   BAttribute "isMarried" Person (t1 TBoolean).
 Definition email :=
   BAttribute "email" Person (t2 [TString]).
+Definition salary :=
+  BAttribute "salary" Employee (t1 TInteger).
+Definition location :=
+  BAttribute "location" Branch (t2 [TString]).
 
 Definition car_attibute :=
-  [firstname;lastname;age;isMarried;email].
+  [firstname;lastname;age;isMarried;email;salary;location].
 
 Definition description :=
   BOperation "description" Car [(t1 TString)].
@@ -202,3 +206,61 @@ Proof.
 Admitted.
 
 
+Require Import objectdiagram.
+
+(* object diagrams *)
+Definition b1 := BObject Branch "b1".
+Definition e1 := BObject Employee "e1".
+Definition e2 := BObject Employee "e2".
+
+Definition car_objects := [b1;e1;e2].
+
+Definition v1 := BAttrval location b1 (AString "Berlin").
+Definition v2 := BAttrval firstname e1 (AString "John").
+Definition v3 := BAttrval lastname e1 (AString "Clark").
+Definition v4 := BAttrval age e1 (AInteger 47).
+Definition v5 := BAttrval isMarried e1 (ABoolean true).
+Definition v6 := BAttrval salary e1 (AInteger 72).
+Definition v7 := BAttrval firstname e2 (AString "Frank").
+Definition v8 := BAttrval lastname e2 (AString "Barnes").
+Definition v9 := BAttrval age e2 (AInteger 23).
+Definition v10 := BAttrval isMarried e2 (ABoolean false).
+Definition v11 := BAttrval salary e2 (AInteger 38).
+
+Definition car_attrivals := [v1;v2;v3;v4;v5;v6;v7;v8;v9;v10;v11].
+
+
+Definition l1 := BLink Management [b1;e1].
+Definition l2 := BLink Employment [b1;e1].
+Definition l3 := BLink Employment [b1;e2].
+
+Definition car_links := [l1;l2;l3].
+
+
+Definition car_rental_state :=
+  mkState car_objects car_attrivals car_links.
+
+
+Example sat_rule1:
+  sat_object_class car_rental car_rental_state.
+Proof.
+  unfold car_rental, car_rental_state, sat_object_class; crush.
+  + exists Branch; crush.
+  + exists Employee; crush.
+  + exists Employee; crush.
+Qed.
+
+
+Example sat_rule2:
+  sat_domain car_rental car_rental_state.
+Proof.
+  unfold car_rental, car_rental_state, sat_domain; crush.
+Qed.
+
+
+Example sat_rule3:
+  sat_abstract_class_domain car_rental car_rental_state.
+Proof.
+  unfold car_rental, car_rental_state, sat_abstract_class_domain; crush.
+  + unfold car_generalization, car_objects, domain; simpl.
+Qed.
