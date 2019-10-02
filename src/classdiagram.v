@@ -31,16 +31,12 @@ Inductive ptype :=
 | TBoolean : ptype
 | TString : ptype.
 
-Inductive type :=
-| t1 : ptype -> type
-| t2 : list ptype -> type.
-
 Inductive attribute : Set :=
-| BAttribute : string ->  class -> type -> attribute.
+| BAttribute : string ->  class -> ptype -> attribute.
 
 (** ----- operation(opid, opname, [parameter], classid) ----- **)
 Inductive operation : Set :=
-| BOperation : string  -> class -> list type -> operation.
+| BOperation : string  -> class -> list ptype -> operation.
 
 (* ----- association(associd, classAid, classBid, assoctype) ----- *)
 Definition assoc := string.
@@ -101,7 +97,7 @@ Definition attr_class (a : attribute) : class :=
   end.
 
 
-Definition attr_type (a : attribute) : type :=
+Definition attr_type (a : attribute) : ptype :=
   match a with
   | (BAttribute _ _ t) => t
   end.
@@ -120,7 +116,7 @@ Definition op_class (o : operation) : class :=
   end.
 
 
-Definition op_parameters (o : operation) : list type :=
+Definition op_parameters (o : operation) : list ptype :=
   match o with
   | BOperation _ _ l => l
   end.
@@ -266,6 +262,41 @@ Fixpoint navends_aux (a : assoc) (l : list role) :=
     then role_names h else navends_aux a l'
   end.
 
+Fixpoint get_assoc (a : assoc) (l : list associates) :=
+  match l with
+  | [] => []
+  | m  :: l =>
+    if beq_assoc a (assoc_name m)
+    then m :: get_assoc a l
+    else get_assoc a l
+  end.
+
+Fixpoint navends' (l : list (class * string)) (c : class) :=
+match l with
+| [] => []
+| (c', r) :: l' => 
+  if beq_class c' c
+  then navends' l' c else r :: navends' l' c
+end.
+
+Definition navends (c : class) (a : associates) (l : list role):=
+  navends' (combine (assoc_classes a) (navends_aux (assoc_name a) l)) c.
+
+Fixpoint nav (c : class) (la: list associates) (lr : list role) : list (list string) :=
+  match la with
+  | [] => []
+  | h :: l' =>
+    if 0 <? List.count_occ eqclass_dec  (assoc_classes h) c 
+    then (navends c h lr) :: nav c l' lr else nav c l' lr
+  end.
+
+
+Print nav.
+
+
+Definition navs (c : class) (la: list associates) (lr : list role) :=
+  fold_left (@app string) (nav c la lr) [].
+
 (** --- get all parents --- **)
 
 (** remove the duplicate class **)
@@ -374,6 +405,16 @@ Definition nsc_nselfgen (model : SimpleUML) :=
   forall c : class, In c (classes model) -> 
     ~ In c (get_children (generalizations model) c).
 
+Print nav.
+
+Definition nsc_role (model : SimpleUML) :=
+  forall c : class, In c (classes model) ->
+    let l := app (parents (generalizations model) c) [c] in
+    forall c1 c2, In c1 l /\ In c2 l -> beq_class c1 c2 = false -> 
+       forall r, In r (navs c1 (associatess model) (roles model)) -> 
+          ~ In r (navs c2 (associatess model) (roles model)).
+
+
 
 Definition natural_eq_n (m : natural) (n : nat) :=
   match m with
@@ -403,3 +444,9 @@ Definition nsc_assoc (model : SimpleUML) :=
     forall m : multiplicity,
       In m (get_multiplicities (assoc_name a) (multiplicities model)) ->
       multi_lower_eq_n m 1 = Some true /\ multi_upper_eq_n m 1 = Some true.
+
+
+Require Coq.extraction.Extraction.
+Extraction Language OCaml.
+
+(* Extraction "class.ml" nsc_assoc. *)

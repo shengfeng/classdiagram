@@ -1,6 +1,9 @@
+
+Add LoadPath "~/Desktop/classdiagram/src".
+
 Require Import Coq.Lists.List. 
 Import ListNotations.
-Require Import Coq.Sorting.Mergesort. 
+Require Import Coq.Sorting.Mergesort.
 Require Export classdiagram.
 Require Import String.
 Require Import CpdtTactics.
@@ -23,34 +26,34 @@ Definition car_class :=
 
 
 Definition firstname :=
-  BAttribute "firstname" Person (t1 TString).
+  BAttribute "firstname" Person TString.
 Definition lastname :=
-  BAttribute "lastname" Person (t1 TString).
+  BAttribute "lastname" Person TString.
 Definition age :=
-  BAttribute "age" Person (t1 TInteger).
+  BAttribute "age" Person TInteger.
 Definition isMarried :=
-  BAttribute "isMarried" Person (t1 TBoolean).
+  BAttribute "isMarried" Person TBoolean.
 Definition email :=
-  BAttribute "email" Person (t2 [TString]).
+  BAttribute "email" Person TString.
 Definition salary :=
-  BAttribute "salary" Employee (t1 TInteger).
+  BAttribute "salary" Employee TInteger.
 Definition location :=
-  BAttribute "location" Branch (t2 [TString]).
+  BAttribute "location" Branch TString.
 
 Definition car_attibute :=
   [firstname;lastname;age;isMarried;email;salary;location].
 
 Definition description :=
-  BOperation "description" Car [(t1 TString)].
+  BOperation "description" Car [TString].
 Definition rentalForDay :=
-  BOperation "rentalForDay" Branch [(t1 TString);(t2 [TClass Rental])].
+  BOperation "rentalForDay" Branch [TString; (TClass Rental)].
 Definition raiseSalary :=
-  BOperation "raiseSalary" Employee [(t1 TInteger);(t1 TInteger)].
+  BOperation "raiseSalary" Employee [TInteger;TInteger].
 
 Definition car_operation :=
   [description;rentalForDay;raiseSalary].
-  
-  
+
+
 (** example **)
 Definition Assignment : assoc := "Assignment".
 Definition Booking : assoc := "Booking".
@@ -94,9 +97,7 @@ Definition a11 :=
 
 Definition car_associates :=
   [a1;a2;a3;a4;a5;a6;a7;a8;a9;a10;a11].
-  
-  
-  
+
 (** example **)
 Definition r1 :=
   BRole Assignment ["rental";"car"].
@@ -124,8 +125,8 @@ Definition r11 :=
 
 Definition car_roles :=
   [r1;r2;r3;r4;r5;r6;r7;r8;r9;r10;r11].
-  
-  
+
+
 (* example *)
 Definition m1 :=
   BMulti Assignment [(Nat 0, Nat 1);(Nat 0, Nat 1)].
@@ -152,8 +153,8 @@ Definition m11 :=
 
 Definition car_multiplicity :=
   [m1;m2;m3;m4;m5;m6;m7;m8;m9;m10;m11].
-  
-  
+
+
 (** example **)
 Definition g1 := BGen Customer Person.
 Definition g2 := BGen Employee Person.
@@ -168,6 +169,12 @@ Definition car_rental := mkSimpleUML
 Compute (participating Car car_associates).
 
 Compute (navends_aux Maintenance car_roles).
+
+Compute (navends Car a6 car_roles).
+
+
+Compute (navs Car car_associates car_roles).
+
 
 Compute (parents car_generalization Customer).
 Compute (parents car_generalization Employee).
@@ -200,10 +207,18 @@ Qed.
 
 
 Example wlf_rule4:
+  nsc_role car_rental.
+Proof.
+  unfold car_rental, nsc_role; crush.
+Qed.
+
+
+
+Example wlf_rule5:
   nsc_assoc car_rental.
 Proof.
-  unfold car_rental, nsc_assoc.
-Admitted.
+  unfold car_rental, nsc_assoc; crush.
+Qed.
 
 
 Require Import objectdiagram.

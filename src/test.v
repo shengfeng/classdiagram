@@ -1,8 +1,9 @@
+Add LoadPath "~/Desktop/classdiagram/src".
+
 Require Import Coq.Lists.List. 
 Import ListNotations.
-Require Import Coq.Sorting.Mergesort. 
+Require Import Coq.Sorting.Mergesort.
 Require Export classdiagram.
-Require Export objectdiagram.
 Require Import String.
 Require Import CpdtTactics.
 Open Scope string_scope.
